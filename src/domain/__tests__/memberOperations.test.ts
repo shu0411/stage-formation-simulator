@@ -1,15 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { addMember, moveMember, removeMember, renameMember } from '../memberOperations';
-import { STAGE_HALF_DEPTH, STAGE_HALF_WIDTH } from '../stageConstants';
+import { fromMeters } from '../axisScale';
+import { STAGE_DEPTH, STAGE_HALF_WIDTH, X_AXIS_SCALE, Y_AXIS_SCALE } from '../stageConstants';
 import type { Formation } from '../types';
 
+const CENTER_Y = fromMeters(STAGE_DEPTH / 2, Y_AXIS_SCALE);
+
 describe('addMember', () => {
-  it('メンバーが0人のとき、ステージ中央に「メンバー1」を1人追加する', () => {
+  it('メンバーが0人のとき、ステージ中央に「メンバー1」を1人追加する（2.2 メンバー追加時の初期位置）', () => {
     const formation: Formation = { members: [] };
 
     const next = addMember(formation, 'id-1');
 
-    expect(next.members).toEqual([{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }]);
+    expect(next.members).toHaveLength(1);
+    expect(next.members[0].id).toBe('id-1');
+    expect(next.members[0].name).toBe('メンバー1');
+    expect(next.members[0].x).toBe(X_AXIS_SCALE.referenceValue);
+    expect(next.members[0].y).toBeCloseTo(CENTER_Y);
   });
 
   it('メンバーがN人のとき、N+1人になり新しいメンバーは連番の名前になる', () => {
@@ -23,7 +30,8 @@ describe('addMember', () => {
     const next = addMember(formation, 'id-3');
 
     expect(next.members).toHaveLength(3);
-    expect(next.members[2]).toEqual({ id: 'id-3', name: 'メンバー3', x: 0, y: 0 });
+    expect(next.members[2].id).toBe('id-3');
+    expect(next.members[2].name).toBe('メンバー3');
   });
 });
 
@@ -60,14 +68,14 @@ describe('moveMember', () => {
   });
 
   it('ステージ範囲外の座標を指定した場合はステージ端に丸める', () => {
-    const next = moveMember(formation, 'id-1', STAGE_HALF_WIDTH + 5, STAGE_HALF_DEPTH + 5);
+    const xMax = fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE);
+    const yFront = fromMeters(0, Y_AXIS_SCALE);
 
-    expect(next.members[0]).toEqual({
-      id: 'id-1',
-      name: 'メンバー1',
-      x: STAGE_HALF_WIDTH,
-      y: STAGE_HALF_DEPTH,
-    });
+    const next = moveMember(formation, 'id-1', xMax + 5, yFront + 5);
+
+    expect(next.members[0].id).toBe('id-1');
+    expect(next.members[0].x).toBeCloseTo(xMax);
+    expect(next.members[0].y).toBeCloseTo(yFront);
   });
 
   it('存在しないIDを指定した場合は変化しない', () => {

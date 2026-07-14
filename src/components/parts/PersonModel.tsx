@@ -13,10 +13,10 @@ const HEAD_RADIUS = 0.2;
 
 /** メンバー1人分の簡易人物モデルと名前ラベル（1.5 3D プレビュー）。 */
 export function PersonModel({ member }: PersonModelProps) {
-  const [x, , z] = toScenePosition(member);
+  const [x, y, z] = toScenePosition(member);
 
   return (
-    <group position={[x, 0, z]}>
+    <group position={[x, y, z]}>
       <mesh position={[0, BODY_HEIGHT / 2, 0]}>
         <cylinderGeometry args={[BODY_RADIUS, BODY_RADIUS, BODY_HEIGHT, 16]} />
         <meshStandardMaterial color="#4a7dff" />

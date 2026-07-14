@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FormationStageSvg } from '../FormationStageSvg';
+import { Y_AXIS_SCALE } from '../../../domain/stageConstants';
 import type { Formation } from '../../../domain/types';
 
 describe('FormationStageSvg', () => {
@@ -13,6 +14,13 @@ describe('FormationStageSvg', () => {
 
     expect(container.querySelectorAll('.grid-line').length).toBeGreaterThan(0);
     expect(container.querySelectorAll('.grid-line--center').length).toBeGreaterThan(0);
+  });
+
+  it('グリッドの下辺・左辺・右辺にグリッド番号を表示する（1.6 グリッド表示）', () => {
+    render(<FormationStageSvg formation={{ members: [] }} />);
+
+    expect(screen.getAllByText('0').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(String(Y_AXIS_SCALE.referenceValue)).length).toBeGreaterThan(0);
   });
 
   it('メンバーが0人のときはステージのみ表示する（1.5 エラー・空状態）', () => {
@@ -65,12 +73,13 @@ describe('FormationStageSvg', () => {
 
   it('interactiveがtrueのときドラッグするとonMoveMemberが呼ばれる（1.5 立ち位置変更）', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      // STAGE_VIEW_BOX（x: -6.6〜6.6, y: 0〜7）に対して 100px/m のスケールで対応させる
       left: 0,
       top: 0,
-      width: 1200,
-      height: 800,
-      right: 1200,
-      bottom: 800,
+      width: 1320,
+      height: 700,
+      right: 1320,
+      bottom: 700,
       x: 0,
       y: 0,
       toJSON: () => '',
@@ -80,8 +89,9 @@ describe('FormationStageSvg', () => {
 
     render(<FormationStageSvg formation={formation} interactive onMoveMember={onMoveMember} />);
     fireEvent.pointerDown(screen.getByTestId('member-id-1'));
-    fireEvent(window, new PointerEvent('pointermove', { clientX: 900, clientY: 200 }));
+    // svg空間で (x=0, y=6=STAGE_DEPTH) はステージ中央・手前端
+    fireEvent(window, new PointerEvent('pointermove', { clientX: 660, clientY: 600 }));
 
-    expect(onMoveMember).toHaveBeenCalledWith('id-1', 3, 2);
+    expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
   });
 });

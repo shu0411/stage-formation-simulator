@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseFormationJson, serializeFormation } from '../serialization';
-import { STAGE_HALF_DEPTH, STAGE_HALF_WIDTH } from '../stageConstants';
+import { fromMeters } from '../axisScale';
+import { STAGE_DEPTH, STAGE_HALF_WIDTH, X_AXIS_SCALE, Y_AXIS_SCALE } from '../stageConstants';
 import type { Formation } from '../types';
 
 describe('serializeFormation', () => {
@@ -50,16 +51,18 @@ describe('parseFormationJson', () => {
   });
 
   it('ステージ範囲外の座標を含むデータはステージ端に丸める（1.6 立ち位置の範囲）', () => {
+    const xMax = fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE);
+    const yBack = fromMeters(STAGE_DEPTH, Y_AXIS_SCALE);
     const json = JSON.stringify({
       version: 1,
-      members: [
-        { id: 'id-1', name: 'メンバー1', x: STAGE_HALF_WIDTH + 10, y: STAGE_HALF_DEPTH + 10 },
-      ],
+      members: [{ id: 'id-1', name: 'メンバー1', x: xMax + 10, y: yBack - 10 }],
     });
 
-    expect(parseFormationJson(json)).toEqual({
-      members: [{ id: 'id-1', name: 'メンバー1', x: STAGE_HALF_WIDTH, y: STAGE_HALF_DEPTH }],
-    });
+    const result = parseFormationJson(json);
+
+    expect(result?.members[0].id).toBe('id-1');
+    expect(result?.members[0].x).toBeCloseTo(xMax);
+    expect(result?.members[0].y).toBeCloseTo(yBack);
   });
 
   it('JSONとして解釈できない文字列の場合はnullを返す', () => {

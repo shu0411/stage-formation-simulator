@@ -1,7 +1,19 @@
 import { useRef } from 'react';
 import { useMemberDrag } from '../../hooks/useMemberDrag';
-import { toSvgPoint } from '../../hooks/svgCoordinates';
-import { GRID_INTERVAL, STAGE_HALF_DEPTH, STAGE_HALF_WIDTH } from '../../domain/stageConstants';
+import {
+  AXIS_LABEL_MARGIN,
+  STAGE_RECT,
+  STAGE_VIEW_BOX,
+  toSvgPoint,
+} from '../../hooks/svgCoordinates';
+import { toMeters } from '../../domain/axisScale';
+import { gridLineValues } from '../../domain/gridLines';
+import {
+  STAGE_DEPTH,
+  STAGE_HALF_WIDTH,
+  X_AXIS_SCALE,
+  Y_AXIS_SCALE,
+} from '../../domain/stageConstants';
 import type { Formation } from '../../domain/types';
 import './FormationStageSvg.css';
 
@@ -16,18 +28,11 @@ type FormationStageSvgProps = {
 };
 
 const MEMBER_RADIUS = 0.35;
-
-function range(from: number, to: number, step: number): number[] {
-  const values: number[] = [];
-  for (let value = from; value <= to + 1e-9; value += step) {
-    values.push(Math.round(value * 1000) / 1000);
-  }
-  return values;
-}
+const LABEL_OFFSET = AXIS_LABEL_MARGIN / 2;
 
 /**
  * ステージの俯瞰図を SVG で描画する（2.1: サムネイルとポップアップで共用）。
- * viewBox はドメインの座標系（メートル、中央原点）と一致させている。
+ * viewBox はグリッド番号表示用の余白を含み、ステージ本体（STAGE_RECT）はその内側に描画する。
  */
 export function FormationStageSvg({
   formation,
@@ -40,44 +45,75 @@ export function FormationStageSvg({
   const svgRef = useRef<SVGSVGElement | null>(null);
   const { startDrag } = useMemberDrag(svgRef, (id, x, y) => onMoveMember?.(id, x, y));
 
-  const verticalLines = range(-STAGE_HALF_WIDTH, STAGE_HALF_WIDTH, GRID_INTERVAL);
-  const horizontalLines = range(-STAGE_HALF_DEPTH, STAGE_HALF_DEPTH, GRID_INTERVAL);
+  const verticalLineValues = gridLineValues(X_AXIS_SCALE, -STAGE_HALF_WIDTH, STAGE_HALF_WIDTH);
+  const horizontalLineValues = gridLineValues(Y_AXIS_SCALE, 0, STAGE_DEPTH);
+  const stageRight = STAGE_RECT.minX + STAGE_RECT.width;
+  const stageBottom = STAGE_RECT.minY + STAGE_RECT.height;
 
   return (
     <svg
       ref={svgRef}
       className={className}
-      viewBox={`${-STAGE_HALF_WIDTH} ${-STAGE_HALF_DEPTH} ${STAGE_HALF_WIDTH * 2} ${STAGE_HALF_DEPTH * 2}`}
+      viewBox={`${STAGE_VIEW_BOX.minX} ${STAGE_VIEW_BOX.minY} ${STAGE_VIEW_BOX.width} ${STAGE_VIEW_BOX.height}`}
       role="img"
       aria-label="ステージの俯瞰図"
     >
       <rect
         className="stage-border"
-        x={-STAGE_HALF_WIDTH}
-        y={-STAGE_HALF_DEPTH}
-        width={STAGE_HALF_WIDTH * 2}
-        height={STAGE_HALF_DEPTH * 2}
+        x={STAGE_RECT.minX}
+        y={STAGE_RECT.minY}
+        width={STAGE_RECT.width}
+        height={STAGE_RECT.height}
       />
-      {verticalLines.map((x) => (
-        <line
-          key={`v-${x}`}
-          className={x === 0 ? 'grid-line grid-line--center' : 'grid-line'}
-          x1={x}
-          y1={-STAGE_HALF_DEPTH}
-          x2={x}
-          y2={STAGE_HALF_DEPTH}
-        />
+      {verticalLineValues.map((value) => {
+        const x = toMeters(value, X_AXIS_SCALE);
+        return (
+          <line
+            key={`v-${value}`}
+            className={value === 0 ? 'grid-line grid-line--center' : 'grid-line'}
+            x1={x}
+            y1={STAGE_RECT.minY}
+            x2={x}
+            y2={stageBottom}
+          />
+        );
+      })}
+      {horizontalLineValues.map((value) => {
+        const y = STAGE_DEPTH - toMeters(value, Y_AXIS_SCALE);
+        return (
+          <line
+            key={`h-${value}`}
+            className="grid-line"
+            x1={STAGE_RECT.minX}
+            y1={y}
+            x2={stageRight}
+            y2={y}
+          />
+        );
+      })}
+      {verticalLineValues.map((value) => (
+        <text
+          key={`vl-${value}`}
+          className="grid-label"
+          x={toMeters(value, X_AXIS_SCALE)}
+          y={stageBottom + LABEL_OFFSET}
+        >
+          {value}
+        </text>
       ))}
-      {horizontalLines.map((y) => (
-        <line
-          key={`h-${y}`}
-          className={y === 0 ? 'grid-line grid-line--center' : 'grid-line'}
-          x1={-STAGE_HALF_WIDTH}
-          y1={y}
-          x2={STAGE_HALF_WIDTH}
-          y2={y}
-        />
-      ))}
+      {horizontalLineValues.map((value) => {
+        const y = STAGE_DEPTH - toMeters(value, Y_AXIS_SCALE);
+        return (
+          <g key={`hl-${value}`}>
+            <text className="grid-label" x={STAGE_RECT.minX - LABEL_OFFSET} y={y}>
+              {value}
+            </text>
+            <text className="grid-label" x={stageRight + LABEL_OFFSET} y={y}>
+              {value}
+            </text>
+          </g>
+        );
+      })}
       {formation.members.map((member) => {
         const point = toSvgPoint(member.x, member.y);
         const selected = member.id === selectedMemberId;

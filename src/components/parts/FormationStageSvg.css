@@ -14,6 +14,13 @@
   stroke-width: 0.04;
 }
 
+.grid-label {
+  fill: #666;
+  font-size: 0.35px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
 .member {
   fill: #4a7dff;
   stroke: #1f3a8f;

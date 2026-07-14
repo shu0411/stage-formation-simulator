@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { appReducer } from '../appReducer';
 import { createInitialAppState } from '../appState';
-import { STAGE_HALF_WIDTH } from '../../domain/stageConstants';
+import { fromMeters } from '../../domain/axisScale';
+import { STAGE_HALF_WIDTH, X_AXIS_SCALE } from '../../domain/stageConstants';
 import type { AppState } from '../appState';
 
 describe('appReducer', () => {
@@ -10,7 +11,8 @@ describe('appReducer', () => {
 
     const next = appReducer(state, { type: 'ADD_MEMBER', id: 'id-1' });
 
-    expect(next.formation.members).toEqual([{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }]);
+    expect(next.formation.members).toHaveLength(1);
+    expect(next.formation.members[0]).toMatchObject({ id: 'id-1', name: 'メンバー1' });
     expect(next.isDirty).toBe(true);
   });
 
@@ -59,7 +61,7 @@ describe('appReducer', () => {
 
     const next = appReducer(state, { type: 'MOVE_MEMBER', id: 'id-1', x: 100, y: 0 });
 
-    expect(next.formation.members[0].x).toBe(STAGE_HALF_WIDTH);
+    expect(next.formation.members[0].x).toBeCloseTo(fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE));
     expect(next.isDirty).toBe(true);
   });
 
