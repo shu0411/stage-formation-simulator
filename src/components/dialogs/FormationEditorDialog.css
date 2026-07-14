@@ -1,0 +1,22 @@
+.formation-editor-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(90vw, 800px);
+  padding: 1rem;
+  background: canvas;
+  border-radius: 8px;
+}
+
+.formation-editor-dialog__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.formation-editor-dialog__svg {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 12 / 8;
+}

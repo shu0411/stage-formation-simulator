@@ -1,0 +1,27 @@
+.stage-border {
+  fill: #f5f0e6;
+  stroke: #333;
+  stroke-width: 0.05;
+}
+
+.grid-line {
+  stroke: #ccc;
+  stroke-width: 0.02;
+}
+
+.grid-line--center {
+  stroke: #999;
+  stroke-width: 0.04;
+}
+
+.member {
+  fill: #4a7dff;
+  stroke: #1f3a8f;
+  stroke-width: 0.05;
+  cursor: pointer;
+}
+
+.member--selected {
+  fill: #ff9f1c;
+  stroke: #c4670a;
+}

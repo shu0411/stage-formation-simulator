@@ -1,0 +1,16 @@
+.formation-thumbnail {
+  display: block;
+  width: 200px;
+  padding: 0;
+  border: 1px solid #888;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.formation-thumbnail__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 12 / 8;
+}
