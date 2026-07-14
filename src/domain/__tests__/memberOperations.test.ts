@@ -67,6 +67,13 @@ describe('moveMember', () => {
     expect(next.members[0]).toEqual({ id: 'id-1', name: 'メンバー1', x: 3, y: -2 });
   });
 
+  it('0.05単位に満たない座標を指定した場合は最も近い0.05単位に丸める', () => {
+    const next = moveMember(formation, 'id-1', 1.234, -2.777);
+
+    expect(next.members[0].x).toBeCloseTo(1.25);
+    expect(next.members[0].y).toBeCloseTo(-2.8);
+  });
+
   it('ステージ範囲外の座標を指定した場合はステージ端に丸める', () => {
     const xMax = fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE);
     const yFront = fromMeters(0, Y_AXIS_SCALE);
