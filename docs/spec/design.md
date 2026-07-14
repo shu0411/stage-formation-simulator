@@ -1,7 +1,7 @@
 # Design
 
 - Source: docs/spec/concept.md
-- Status: Functional Specification Draft
+- Status: Ready for Implementation
 - Last updated: 2026-07-14
 
 ## 1. 仕様設計
@@ -259,3 +259,187 @@ JSON エクスポート / インポート（1.5）
 ### 1.7 未決事項
 
 なし
+
+## 2. 技術設計
+
+### 2.1 システム構成と責務分割
+
+concept.md の技術スタックに従い、バックエンドを持たない SPA として構築する。
+
+**技術スタック（concept.md より）**: React + TypeScript + Vite、
+Three.js + React Three Fiber + Drei。状態管理は React 標準機能のみとし、
+Zustand は導入しない（MVP の状態規模では不要。必要になった時点で再検討）。
+
+**開発ツール（グローバル AGENTS.md の規約に従う）**: ESLint / Prettier / Vitest、
+E2E テストに Playwright。`.vscode/settings.json` で format on save を有効化する。
+
+**ディレクトリ構成と責務**:
+
+クリーンアーキテクチャに準じたレイヤード構成とする。React 層
+（components / hooks / state / App）→ application → domain の一方向の依存とし、
+infrastructure は application が定義するインターフェース（ports）を実装する
+（依存性逆転）。
+
+```text
+src/
+├── domain/          # 業務ルール（純粋ロジック）。フォーメーションの型定義、
+│                    # メンバー操作、ステージ定数、座標の丸め、
+│                    # シリアライズ・バリデーション
+├── application/     # ユースケース（保存・復元・インポート・エクスポートの手順）と、
+│                    # 永続化先のインターフェース定義（ports）
+├── infrastructure/  # ports の実装（LocalStorage 入出力、JSON ファイルの
+│                    # 読み込み・ダウンロード）
+├── components/      # React コンポーネント。UI としての役割でサブディレクトリに
+│   │                # 分類し、テストを同階層に併置する
+│   ├── sections/    # App が配置する画面の区画（3D ビュー、サムネイル、操作 UI）
+│   ├── dialogs/     # モーダル・ポップアップ系（2D 編集ポップアップ）
+│   └── parts/       # 区画・ダイアログの中で使う部品（2D 俯瞰図の SVG、
+│                    # 3D の人物モデル、エラーメッセージ表示など）
+├── hooks/           # カスタムフック（ドラッグ操作の座標変換など）
+├── state/           # アプリ状態（useReducer + Context）
+├── App.tsx          # レイアウト（1.4 の画面構成）と各部の結線
+└── main.tsx         # エントリーポイント
+```
+
+- `domain`・`application`・`infrastructure` は React に依存しない TypeScript
+  のみとする。うち `domain`・`application` はブラウザ API にも依存しない
+  純粋なロジックとし、ユニットテストの主対象とする
+- ports へ infrastructure の実装を渡す結線（依存性の注入）は、エントリーポイント
+  である main.tsx で行う
+- 新しいロジックの置き場所は「業務ルール → domain、操作の手順 → application、
+  外部 I/O → infrastructure、画面 → components / hooks / state」を基準に判断する
+- コンポーネントの参照は「App → `sections`（および `dialogs`）→ `parts`」を
+  基本ルールとし、画面全体の骨組み（区画の配置）は App.tsx が担う。
+  単一のボタンのような小さな要素を App が直接 `parts` から参照することは許容する
+- ステージ寸法（1.6）とグリッド間隔は `domain` の定数として一元定義し、
+  2D・3D の両方がこれを参照する（将来のサイズ変更に備えた抽象化はしない）
+- 2D の俯瞰図は SVG で描画し、サムネイルとポップアップは同一コンポーネントを
+  表示スケールと操作可否の違いで使い分ける
+
+### 2.2 データ・状態設計
+
+**ドメイン型**（1.6 のフォーメーションデータに対応）:
+
+```ts
+type Member = { id: string; name: string; x: number; y: number };
+type Formation = { members: Member[] };
+```
+
+- `id` は `crypto.randomUUID()` で生成。名前変更・削除の対象特定に使う
+- `x`, `y` は 1.6 の座標系（メートル、ステージ中央原点。x: 客席から見て右が正、
+  y: ステージ奥が正）
+- 3D 空間へは x → X 軸、y → −Z 軸（客席側を +Z）、床面 Y=0 として写像する
+
+**永続化・交換フォーマット**（JSON エクスポート / インポート / LocalStorage 共通）:
+
+```json
+{ "version": 1, "members": [{ "id": "...", "name": "...", "x": 0, "y": 0 }] }
+```
+
+- `version` は将来のフォーマット変更に備えた識別のみ（変換処理は作らない）
+- LocalStorage のキーは `stage-formation-simulator:formation` の 1 つ
+
+**アプリ状態**（`state/` の useReducer + Context で一元管理）:
+
+- `formation: Formation` — 現在のフォーメーション
+- `selectedMemberId: string | null` — 選択中メンバー（1.6 メンバーの選択）
+- `isEditorOpen: boolean` — 2D 編集ポップアップの開閉
+- `isDirty: boolean` — 未保存の変更の有無（保存・復元・起動直後は false、
+  フォーメーションへの変更で true）
+- `errorMessage: string | null` — インポートエラー等の表示用
+
+### 2.3 処理・データフロー
+
+単方向のデータフローとする。
+
+```text
+UI 操作（components / hooks）
+    ↓ dispatch（追加・削除・移動・名前変更・置換・保存済みマーク など）
+reducer が domain のロジックで新しい状態を生成
+    ↓ React の再レンダリング
+サムネイル・編集ポップアップ（SVG）と 3D ビュー（R3F）が同じ状態を描画
+```
+
+- 1.6 の「リアルタイム反映」は、全ビューが同一状態を購読することで実現する。
+  ドラッグ中も pointer イベントごとに移動を dispatch する
+- ドラッグ座標は SVG のピクセル座標からメートルへ変換し、`domain` の
+  丸め関数でステージ領域内（1.6 立ち位置の範囲）に収める。
+  インポート・復元時も同じ丸め関数を通す
+- 保存・復元・インポート・エクスポートは `application` のユースケースとして
+  実装し、ports を介して `infrastructure`（LocalStorage・ファイル I/O）を呼ぶ
+- インポート: ファイル選択 → テキスト読み込み → `domain` のバリデーション
+  （JSON パース＋スキーマ検査）→ 成功時のみフォーメーションを置換
+- エクスポート: 現在の状態をシリアライズし、Blob としてダウンロードさせる
+  （ファイル名は `formation.json`）
+- 保存: シリアライズして LocalStorage へ書き込み、`isDirty` を false にする。
+  起動時に LocalStorage を読み、あれば置換する
+- 未保存警告（1.5 保存・復元）: `isDirty` が true の間だけ `beforeunload`
+  ハンドラーを登録する
+
+### 2.4 エラー処理
+
+- **インポート失敗**（1.5 JSON インポートのエラー系）: バリデーション失敗時は
+  状態を変更せず `errorMessage` を設定し、画面上にメッセージを表示する。
+  次の操作またはメッセージを閉じる操作でクリアする
+- **LocalStorage の破損データ**: 起動時の読み込みでバリデーションに失敗した場合は
+  保存データなしとして扱い、空のステージで開始する（1.5 保存・復元の空状態）
+- **削除確認**（1.5 メンバー削除）: `window.confirm` を使う（MVP では独自
+  ダイアログを作らない）
+- **未保存警告**: ブラウザ標準の `beforeunload` ダイアログを使う
+
+### 2.5 テスト方針
+
+1.5 の受け入れ条件と 1 対 1 で対応させる。検証手段は次の 2 層とし、
+テスト名（describe / it）は日本語で書く。
+
+- **ユニットテスト（Vitest + React Testing Library）**: domain のロジックと、
+  コンポーネントの振る舞い。TDD の起点としてこちらを先に書く
+- **E2E テスト（Playwright）**: ページ再読み込み・ファイルダウンロード・
+  ブラウザダイアログ・WebGL 描画など、ユニットテストで検証できない受け入れ条件
+
+| 1.5 の機能 | 先に書くユニットテスト | E2E で担う受け入れ条件 |
+| --- | --- | --- |
+| 2D エディター表示 | ポップアップの開閉と編集内容の保持、サムネイルの追従、グリッド線の描画 | — |
+| メンバー追加 | 0 人→中央に「メンバー1」、N 人→N+1 人と連番名（domain）、両ビューへの表示 | — |
+| メンバー削除 | 確認承認で削除・キャンセルで維持（confirm をモック）、未選択時は実行不可 | — |
+| 立ち位置変更 | ドラッグでの座標更新と追従、ステージ端での丸め（domain の丸め関数） | — |
+| メンバー名編集 | 名前の反映、空文字で元に戻る（domain） | — |
+| 3D プレビュー | 座標写像関数（domain）、0 人時の空表示 | 固定視点での表示、人物モデルと名前ラベルの表示 |
+| JSON エクスポート | シリアライズ結果、エクスポート→インポートの往復一致（domain） | ファイルのダウンロード |
+| JSON インポート | バリデーション（正常・不正）、不正時に状態が変わらないこと | ファイル選択から反映までの一連の流れ |
+| 保存・復元 | isDirty の遷移、シリアライズ・復元ロジック | 保存→再読み込みで復元、未保存時の警告、データなしで空ステージ |
+
+- 3D の名前ラベルは Drei の `Html` で DOM として描画し、E2E から名前を
+  検証できるようにする
+- 3D の見た目（モデルの形状など）の詳細は自動テストせず、目視で確認する
+
+### 2.6 実装順序
+
+1. プロジェクト基盤: Vite（react-ts テンプレート）、ESLint、Prettier、Vitest、
+   Playwright、`.vscode/settings.json`（format on save）
+2. `domain`: 型、ステージ定数、メンバー操作（追加・削除・移動・改名）、座標の
+   丸め、シリアライズ・バリデーション — TDD でテストから書く
+3. `application` と `infrastructure`: ユースケース・ports の定義と、
+   LocalStorage・ファイル I/O の実装 — TDD
+4. `state`: reducer と Context — TDD
+5. 2D エディターのコンポーネント: ステージ SVG（グリッド含む）→ サムネイル →
+   ポップアップ → 追加・選択・ドラッグ・削除・名前編集 — TDD
+6. 3D ビューのコンポーネント: ステージ、人物モデル、名前ラベル、固定カメラ
+7. 操作 UI のコンポーネント: 保存・復元、未保存警告、エクスポート・インポート、
+   エラーメッセージ表示をユースケースと結線 — TDD
+8. レイアウト調整（1.4 の画面構成、レスポンシブ対応）
+9. E2E テスト（2.5 の E2E 担当分）を通し、全受け入れ条件を確認する
+
+### 2.7 技術的リスク・未決事項
+
+- **React と R3F のバージョン整合**: React Three Fiber / Drei が対応する React・
+  Three.js のバージョン組み合わせを構築時に確認して固定する
+- **ドラッグ中の再レンダリング性能**: ドラッグごとに全ビューが再描画されるが、
+  MVP のメンバー数規模では問題にならない見込み。体感で問題が出た場合のみ
+  最適化を検討する（先回りの最適化はしない）
+- **CI・テスト環境での WebGL**: jsdom では WebGL を描画できないため 3D の検証は
+  E2E に寄せる。Playwright のヘッドレス Chromium はソフトウェアレンダリングで
+  WebGL を実行できる想定だが、構築時に動作確認する
+- **beforeunload の挙動差**: 警告ダイアログの表示はブラウザ実装に依存する。
+  ロジック（isDirty とハンドラー登録）はユニットテストで担保し、実ブラウザでの
+  表示は Playwright と目視で確認する
