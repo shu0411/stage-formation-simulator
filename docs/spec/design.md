@@ -290,7 +290,7 @@ src/
 ├── infrastructure/  # ports の実装（LocalStorage 入出力、JSON ファイルの
 │                    # 読み込み・ダウンロード）
 ├── components/      # React コンポーネント。UI としての役割でサブディレクトリに
-│   │                # 分類し、テストを同階層に併置する
+│   │                # 分類する
 │   ├── sections/    # App が配置する画面の区画（3D ビュー、サムネイル、操作 UI）
 │   ├── dialogs/     # モーダル・ポップアップ系（2D 編集ポップアップ）
 │   └── parts/       # 区画・ダイアログの中で使う部品（2D 俯瞰図の SVG、
@@ -315,6 +315,9 @@ src/
   2D・3D の両方がこれを参照する（将来のサイズ変更に備えた抽象化はしない）
 - 2D の俯瞰図は SVG で描画し、サムネイルとポップアップは同一コンポーネントを
   表示スケールと操作可否の違いで使い分ける
+- テストファイルは対象コードと同階層の `__tests__` ディレクトリに置く
+  （例: `domain/coordinates.ts` → `domain/__tests__/coordinates.test.ts`）。
+  全レイヤー（`domain` / `application` / `infrastructure` / `components` など）で統一する
 
 ### 2.2 データ・状態設計
 
