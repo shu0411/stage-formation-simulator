@@ -1,26 +1,9 @@
-.formation-editor-dialog {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: min(90vw, 800px);
-  padding: 1rem;
-  background: canvas;
-  border-radius: 8px;
-}
-
-.formation-editor-dialog__close {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-}
-
 .formation-editor-dialog__toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
-  padding-right: 2.5rem;
+  margin-top: 0.5rem;
 }
 
 .formation-editor-dialog__svg {

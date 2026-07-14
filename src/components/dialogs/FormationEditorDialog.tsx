@@ -1,5 +1,7 @@
 import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
 import TextField from '@mui/material/TextField';
 import { FormationStageSvg } from '../parts/FormationStageSvg';
 import { MemberNameInput } from '../parts/MemberNameInput';
@@ -38,45 +40,50 @@ export function FormationEditorDialog() {
   };
 
   return (
-    <div role="dialog" aria-label="2D編集ポップアップ" className="formation-editor-dialog">
-      <IconButton
-        onClick={handleClose}
-        aria-label="閉じる"
-        size="small"
-        className="formation-editor-dialog__close"
-      >
-        ×
-      </IconButton>
-      <div className="formation-editor-dialog__toolbar">
-        <Button variant="contained" onClick={handleAdd}>
-          メンバーを追加
+    <Dialog
+      open
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      slotProps={{ paper: { 'aria-label': '2D編集ポップアップ' } }}
+    >
+      <DialogContent>
+        <FormationStageSvg
+          formation={state.formation}
+          selectedMemberId={state.selectedMemberId}
+          interactive
+          onSelectMember={(id) => dispatch({ type: 'SELECT_MEMBER', id })}
+          onMoveMember={(id, x, y) => dispatch({ type: 'MOVE_MEMBER', id, x, y })}
+          className="formation-editor-dialog__svg"
+        />
+        <div className="formation-editor-dialog__toolbar">
+          <Button variant="contained" onClick={handleAdd}>
+            メンバーを追加
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleDelete}
+            disabled={selectedMember === null}
+          >
+            削除
+          </Button>
+          {selectedMember === null ? (
+            <TextField size="small" label="メンバー名" value="" disabled />
+          ) : (
+            <MemberNameInput
+              key={selectedMember.id}
+              member={selectedMember}
+              onSubmit={(name) => dispatch({ type: 'RENAME_MEMBER', id: selectedMember.id, name })}
+            />
+          )}
+        </div>
+      </DialogContent>
+      <DialogActions>
+        <Button variant="outlined" onClick={handleClose}>
+          閉じる
         </Button>
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={handleDelete}
-          disabled={selectedMember === null}
-        >
-          削除
-        </Button>
-        {selectedMember === null ? (
-          <TextField size="small" label="メンバー名" value="" disabled />
-        ) : (
-          <MemberNameInput
-            key={selectedMember.id}
-            member={selectedMember}
-            onSubmit={(name) => dispatch({ type: 'RENAME_MEMBER', id: selectedMember.id, name })}
-          />
-        )}
-      </div>
-      <FormationStageSvg
-        formation={state.formation}
-        selectedMemberId={state.selectedMemberId}
-        interactive
-        onSelectMember={(id) => dispatch({ type: 'SELECT_MEMBER', id })}
-        onMoveMember={(id, x, y) => dispatch({ type: 'MOVE_MEMBER', id, x, y })}
-        className="formation-editor-dialog__svg"
-      />
-    </div>
+      </DialogActions>
+    </Dialog>
   );
 }

@@ -22,11 +22,7 @@ function App({ storage, fileIO }: AppProps) {
         <FormationThumbnail />
         <OperationsBar storage={storage} fileIO={fileIO} />
       </div>
-      {state.isEditorOpen && (
-        <div className="app-layout__modal-backdrop">
-          <FormationEditorDialog />
-        </div>
-      )}
+      {state.isEditorOpen && <FormationEditorDialog />}
     </div>
   );
 }
