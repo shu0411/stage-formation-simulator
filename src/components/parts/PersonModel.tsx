@@ -25,7 +25,9 @@ export function PersonModel({ member }: PersonModelProps) {
         <sphereGeometry args={[HEAD_RADIUS, 16, 16]} />
         <meshStandardMaterial color="#f4c99b" />
       </mesh>
-      <Html position={[0, BODY_HEIGHT + HEAD_RADIUS * 2 + 0.2, 0]} center>
+      {/* zIndexRange: Drei の既定値(最大約1677万)は画面UIのz-indexを軽く上回ってしまうため、
+          ポップアップ等のUIが名前ラベルより手前に出せるよう小さい範囲に制限する */}
+      <Html position={[0, BODY_HEIGHT + HEAD_RADIUS * 2 + 0.2, 0]} center zIndexRange={[1, 0]}>
         <span className="person-model__label">{member.name}</span>
       </Html>
     </group>

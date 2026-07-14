@@ -1,10 +1,15 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import './index.css';
 import App from './App.tsx';
+import { AppStateProvider } from './state/AppStateContext';
+import { localStorageFormationStorage } from './infrastructure/localStorageFormationStorage';
+import { fileFormationIO } from './infrastructure/fileFormationIO';
+import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <AppStateProvider storage={localStorageFormationStorage}>
+      <App storage={localStorageFormationStorage} fileIO={fileFormationIO} />
+    </AppStateProvider>
   </StrictMode>,
 );
