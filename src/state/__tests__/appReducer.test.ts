@@ -120,4 +120,16 @@ describe('appReducer', () => {
     const cleared = appReducer(withError, { type: 'CLEAR_ERROR' });
     expect(cleared.errorMessage).toBeNull();
   });
+
+  it('エラー表示中に別の操作をすると、その操作と同時にエラーメッセージがクリアされる（2.4 インポート失敗）', () => {
+    const state: AppState = {
+      ...createInitialAppState({ members: [] }),
+      errorMessage: '不正なファイルです',
+    };
+
+    const next = appReducer(state, { type: 'ADD_MEMBER', id: 'id-1' });
+
+    expect(next.errorMessage).toBeNull();
+    expect(next.formation.members).toHaveLength(1);
+  });
 });

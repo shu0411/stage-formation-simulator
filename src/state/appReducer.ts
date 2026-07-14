@@ -3,6 +3,11 @@ import type { AppAction, AppState } from './appState';
 
 /** アプリ状態の reducer（2.3 処理・データフロー）。domain のロジックで新しい状態を生成する。 */
 export function appReducer(state: AppState, action: AppAction): AppState {
+  // エラー表示中に別の操作をすると、その操作と同時にエラーメッセージをクリアする（2.4 インポート失敗）
+  if (action.type !== 'SET_ERROR' && state.errorMessage !== null) {
+    state = { ...state, errorMessage: null };
+  }
+
   switch (action.type) {
     case 'ADD_MEMBER':
       return { ...state, formation: addMember(state.formation, action.id), isDirty: true };
