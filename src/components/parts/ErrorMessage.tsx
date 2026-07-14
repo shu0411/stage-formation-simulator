@@ -1,5 +1,6 @@
+import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
-import './ErrorMessage.css';
 
 /** インポートエラー等のメッセージ表示（2.4 エラー処理）。閉じる操作でクリアする。 */
 export function ErrorMessage() {
@@ -11,15 +12,20 @@ export function ErrorMessage() {
   }
 
   return (
-    <div role="alert" className="error-message">
-      <p>{state.errorMessage}</p>
-      <button
-        type="button"
-        onClick={() => dispatch({ type: 'CLEAR_ERROR' })}
-        aria-label="エラーメッセージを閉じる"
-      >
-        ×
-      </button>
-    </div>
+    <Alert
+      severity="error"
+      action={
+        <IconButton
+          color="inherit"
+          size="small"
+          onClick={() => dispatch({ type: 'CLEAR_ERROR' })}
+          aria-label="エラーメッセージを閉じる"
+        >
+          ×
+        </IconButton>
+      }
+    >
+      {state.errorMessage}
+    </Alert>
   );
 }

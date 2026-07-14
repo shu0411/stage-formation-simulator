@@ -1,4 +1,5 @@
 import type { ChangeEvent } from 'react';
+import Button from '@mui/material/Button';
 import { exportFormation } from '../../application/exportFormation';
 import { importFormation } from '../../application/importFormation';
 import { saveFormation } from '../../application/saveFormation';
@@ -52,16 +53,16 @@ export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
   return (
     <div className="operations-bar">
       <div className="operations-bar__controls">
-        <button type="button" onClick={handleSave}>
+        <Button variant="contained" onClick={handleSave}>
           保存
-        </button>
-        <button type="button" onClick={handleExport}>
+        </Button>
+        <Button variant="outlined" onClick={handleExport}>
           JSONエクスポート
-        </button>
-        <label className="operations-bar__import-label">
+        </Button>
+        <Button component="label" variant="outlined">
           JSONインポート
-          <input type="file" accept="application/json,.json" onChange={handleImportChange} />
-        </label>
+          <input type="file" hidden accept="application/json,.json" onChange={handleImportChange} />
+        </Button>
       </div>
       <ErrorMessage />
     </div>

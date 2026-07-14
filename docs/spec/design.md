@@ -285,6 +285,14 @@ concept.md の技術スタックに従い、バックエンドを持たない SP
 Three.js + React Three Fiber + Drei。状態管理は React 標準機能のみとし、
 Zustand は導入しない（MVP の状態規模では不要。必要になった時点で再検討）。
 
+**UI コンポーネントライブラリ**: フォーム系 UI（ボタン・テキスト入力・ファイル選択・
+エラーメッセージ表示）には MUI（`@mui/material` + `@emotion/react` /
+`@emotion/styled`）を使う。3D ビュー（Three.js / R3F）と 2D エディターの
+俯瞰図（SVG、`FormationStageSvg` とその子要素）は対象外とし、独自描画のまま
+とする。2D 編集ポップアップの外枠・削除確認ダイアログは、2.4 で定めた
+`window.confirm` を使う方針を維持するため、MUI の `Dialog` には置き換えない
+（将来この方針を変える場合は 2.4 も合わせて更新する）。
+
 **開発ツール（グローバル AGENTS.md の規約に従う）**: ESLint / Prettier / Vitest、
 E2E テストに Playwright。`.vscode/settings.json` で format on save を有効化する。
 

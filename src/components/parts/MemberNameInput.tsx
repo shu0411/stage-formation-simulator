@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import TextField from '@mui/material/TextField';
 import type { Member } from '../../domain/types';
 
 type MemberNameInputProps = {
@@ -22,9 +23,9 @@ export function MemberNameInput({ member, onSubmit }: MemberNameInputProps) {
   };
 
   return (
-    <input
-      type="text"
-      aria-label="メンバー名"
+    <TextField
+      size="small"
+      label="メンバー名"
       value={draftName}
       onChange={(event) => setDraftName(event.target.value)}
       onBlur={submit}

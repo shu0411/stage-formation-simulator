@@ -1,3 +1,6 @@
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
 import { FormationStageSvg } from '../parts/FormationStageSvg';
 import { MemberNameInput } from '../parts/MemberNameInput';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
@@ -36,15 +39,28 @@ export function FormationEditorDialog() {
 
   return (
     <div role="dialog" aria-label="2D編集ポップアップ" className="formation-editor-dialog">
+      <IconButton
+        onClick={handleClose}
+        aria-label="閉じる"
+        size="small"
+        className="formation-editor-dialog__close"
+      >
+        ×
+      </IconButton>
       <div className="formation-editor-dialog__toolbar">
-        <button type="button" onClick={handleAdd}>
+        <Button variant="contained" onClick={handleAdd}>
           メンバーを追加
-        </button>
-        <button type="button" onClick={handleDelete} disabled={selectedMember === null}>
+        </Button>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={handleDelete}
+          disabled={selectedMember === null}
+        >
           削除
-        </button>
+        </Button>
         {selectedMember === null ? (
-          <input type="text" aria-label="メンバー名" value="" disabled readOnly />
+          <TextField size="small" label="メンバー名" value="" disabled />
         ) : (
           <MemberNameInput
             key={selectedMember.id}
@@ -52,9 +68,6 @@ export function FormationEditorDialog() {
             onSubmit={(name) => dispatch({ type: 'RENAME_MEMBER', id: selectedMember.id, name })}
           />
         )}
-        <button type="button" onClick={handleClose}>
-          閉じる
-        </button>
       </div>
       <FormationStageSvg
         formation={state.formation}
