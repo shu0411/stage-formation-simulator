@@ -1,0 +1,39 @@
+import { Canvas, useThree } from '@react-three/fiber';
+import { useEffect } from 'react';
+import { PersonModel } from '../parts/PersonModel';
+import { StageFloor3D } from '../parts/StageFloor3D';
+import { useAppState } from '../../state/useAppState';
+import { STAGE_HALF_DEPTH } from '../../domain/stageConstants';
+
+/** 客席中央からステージ全体を見る固定位置・注視点（1.5 3D プレビュー、1.1 対象外: 視点切り替え）。 */
+const CAMERA_POSITION: [number, number, number] = [0, 6, STAGE_HALF_DEPTH + 10];
+const CAMERA_LOOK_AT: [number, number, number] = [0, 1, 0];
+const CAMERA_FOV = 50;
+
+function FixedCamera() {
+  const { camera } = useThree();
+
+  useEffect(() => {
+    camera.position.set(...CAMERA_POSITION);
+    camera.lookAt(...CAMERA_LOOK_AT);
+  }, [camera]);
+
+  return null;
+}
+
+/** 3D ビュー（1.4 画面構成、1.5 3D プレビュー）。フォーメーションの現在の状態を常に表示する。 */
+export function FormationView3D() {
+  const state = useAppState();
+
+  return (
+    <Canvas camera={{ fov: CAMERA_FOV }} shadows>
+      <FixedCamera />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[5, 10, 5]} intensity={0.8} castShadow />
+      <StageFloor3D />
+      {state.formation.members.map((member) => (
+        <PersonModel key={member.id} member={member} />
+      ))}
+    </Canvas>
+  );
+}
