@@ -23,6 +23,14 @@ describe('FormationStageSvg', () => {
     expect(screen.getAllByText(String(Y_AXIS_SCALE.referenceValue)).length).toBeGreaterThan(0);
   });
 
+  it('前後（Y軸）の0のグリッド線を太線で表示する（左右軸の0番の線と同様）', () => {
+    const { container } = render(<FormationStageSvg formation={{ members: [] }} />);
+
+    // 縦線（左右軸）・横線（前後軸）それぞれ1本ずつ、0番の線がgrid-line--centerになる
+    const centerLines = container.querySelectorAll('.grid-line--center');
+    expect(centerLines.length).toBe(2);
+  });
+
   it('メンバーが0人のときはステージのみ表示する（1.5 エラー・空状態）', () => {
     const { container } = render(<FormationStageSvg formation={{ members: [] }} />);
 
@@ -45,7 +53,7 @@ describe('FormationStageSvg', () => {
     );
   });
 
-  it('interactiveがfalseのときメンバーをクリックしても選択されない', () => {
+  it('interactiveがfalseのときメンバーを押しても選択されない', () => {
     const onSelectMember = vi.fn();
     const formation: Formation = { members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] };
 
@@ -56,17 +64,17 @@ describe('FormationStageSvg', () => {
         onSelectMember={onSelectMember}
       />,
     );
-    fireEvent.click(screen.getByTestId('member-id-1'));
+    fireEvent.pointerDown(screen.getByTestId('member-id-1'));
 
     expect(onSelectMember).not.toHaveBeenCalled();
   });
 
-  it('interactiveがtrueのときメンバーをクリックすると選択される', () => {
+  it('interactiveがtrueのときメンバーを押すと選択される（ドラッグ開始時点で選択し、移動完了を待たない）', () => {
     const onSelectMember = vi.fn();
     const formation: Formation = { members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] };
 
     render(<FormationStageSvg formation={formation} interactive onSelectMember={onSelectMember} />);
-    fireEvent.click(screen.getByTestId('member-id-1'));
+    fireEvent.pointerDown(screen.getByTestId('member-id-1'));
 
     expect(onSelectMember).toHaveBeenCalledWith('id-1');
   });

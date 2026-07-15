@@ -83,7 +83,7 @@ export function FormationStageSvg({
         return (
           <line
             key={`h-${value}`}
-            className="grid-line"
+            className={value === 0 ? 'grid-line grid-line--center' : 'grid-line'}
             x1={STAGE_RECT.minX}
             y1={y}
             x2={stageRight}
@@ -125,8 +125,14 @@ export function FormationStageSvg({
             cx={point.x}
             cy={point.y}
             r={MEMBER_RADIUS}
-            onClick={interactive ? () => onSelectMember?.(member.id) : undefined}
-            onPointerDown={interactive ? () => startDrag(member.id) : undefined}
+            onPointerDown={
+              interactive
+                ? () => {
+                    onSelectMember?.(member.id);
+                    startDrag(member.id);
+                  }
+                : undefined
+            }
           />
         );
       })}
