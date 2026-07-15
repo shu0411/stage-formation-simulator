@@ -29,8 +29,8 @@ export function MemberPositionInput({ member, onSubmit }: MemberPositionInputPro
         disabled={member === null}
         step={POSITION_STEP}
         largeStep={LARGE_POSITION_STEP}
-        incrementLabel="左右を増加"
-        decrementLabel="左右を減少"
+        incrementLabel="右へ"
+        decrementLabel="左へ"
         onValueCommitted={(value) => {
           if (member !== null && value !== null) {
             onSubmit(value, member.y);
@@ -44,8 +44,8 @@ export function MemberPositionInput({ member, onSubmit }: MemberPositionInputPro
         disabled={member === null}
         step={POSITION_STEP}
         largeStep={LARGE_POSITION_STEP}
-        incrementLabel="前後を増加"
-        decrementLabel="前後を減少"
+        incrementLabel="前へ"
+        decrementLabel="後ろへ"
         onValueCommitted={(value) => {
           if (member !== null && value !== null) {
             onSubmit(member.x, value);

@@ -50,7 +50,7 @@ describe('parseFormationJson', () => {
     expect(parseFormationJson(serializeFormation(formation))).toEqual(formation);
   });
 
-  it('ステージ範囲外の座標を含むデータはステージ端に丸める（1.6 立ち位置の範囲）', () => {
+  it('ステージ範囲外の座標を含むデータは、範囲内に収まる0.05単位の値に丸める（1.6 立ち位置の範囲）', () => {
     const xMax = fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE);
     const yBack = fromMeters(STAGE_DEPTH, Y_AXIS_SCALE);
     const json = JSON.stringify({
@@ -61,8 +61,23 @@ describe('parseFormationJson', () => {
     const result = parseFormationJson(json);
 
     expect(result?.members[0].id).toBe('id-1');
-    expect(result?.members[0].x).toBeCloseTo(xMax);
-    expect(result?.members[0].y).toBeCloseTo(yBack);
+    // xMax(6.2222...)・yBack(-4.6666...)は0.05単位でないため、範囲内に収まる値に丸められる
+    expect(result?.members[0].x).toBeCloseTo(6.2);
+    expect(result?.members[0].x).toBeLessThanOrEqual(xMax);
+    expect(result?.members[0].y).toBeCloseTo(-4.65);
+    expect(result?.members[0].y).toBeGreaterThanOrEqual(yBack);
+  });
+
+  it('0.05単位でない座標を含むデータは、最も近い0.05単位の値に丸める', () => {
+    const json = JSON.stringify({
+      version: 1,
+      members: [{ id: 'id-1', name: 'メンバー1', x: 1.234, y: -2.777 }],
+    });
+
+    const result = parseFormationJson(json);
+
+    expect(result?.members[0].x).toBeCloseTo(1.25);
+    expect(result?.members[0].y).toBeCloseTo(-2.8);
   });
 
   it('JSONとして解釈できない文字列の場合はnullを返す', () => {

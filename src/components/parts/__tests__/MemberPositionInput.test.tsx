@@ -86,7 +86,7 @@ describe('MemberPositionInput', () => {
     const user = userEvent.setup();
     render(<MemberPositionInput member={member} onSubmit={onSubmit} />);
 
-    await user.click(screen.getByRole('button', { name: '左右を増加' }));
+    await user.click(screen.getByRole('button', { name: '右へ' }));
 
     expect(onSubmit).toHaveBeenCalledWith(1.05, 2);
   });
@@ -96,7 +96,7 @@ describe('MemberPositionInput', () => {
     const user = userEvent.setup();
     render(<MemberPositionInput member={member} onSubmit={onSubmit} />);
 
-    await user.click(screen.getByRole('button', { name: '前後を減少' }));
+    await user.click(screen.getByRole('button', { name: '後ろへ' }));
 
     expect(onSubmit).toHaveBeenCalledWith(1, 1.95);
   });

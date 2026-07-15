@@ -82,7 +82,7 @@ export function NumberField({
                     flex: 1,
                     minWidth: 0,
                     minHeight: 0,
-                    width: size === 'small' ? 18 : 22,
+                    width: size === 'small' ? 28 : 34,
                     borderRadius: 0.5,
                     fontSize: size === 'small' ? '0.5rem' : '0.6rem',
                     lineHeight: 1,

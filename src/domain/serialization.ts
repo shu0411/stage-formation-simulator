@@ -1,4 +1,4 @@
-import { clampPosition } from './coordinates';
+import { snapPositionWithinStage } from './coordinates';
 import { FORMATION_FORMAT_VERSION } from './types';
 import type { Formation, Member } from './types';
 
@@ -23,7 +23,8 @@ function isValidMember(value: unknown): value is Member {
 /**
  * JSON 文字列をフォーメーションに変換する（2.3 インポート・2.4 エラー処理）。
  * JSON として解釈できない場合、またはフォーメーションデータの形式でない場合は null を返す。
- * ステージ範囲外の座標は端に丸める（1.6 立ち位置の範囲）。
+ * 座標は 0.05 単位に丸めたうえでステージ範囲内に収める（1.6 立ち位置の範囲。
+ * 立ち位置変更と同じ丸めルール）。
  */
 export function parseFormationJson(json: string): Formation | null {
   let data: unknown;
@@ -46,7 +47,7 @@ export function parseFormationJson(json: string): Formation | null {
 
   const members = candidate.members.map((member) => ({
     ...member,
-    ...clampPosition(member.x, member.y),
+    ...snapPositionWithinStage(member.x, member.y),
   }));
   return { members };
 }
