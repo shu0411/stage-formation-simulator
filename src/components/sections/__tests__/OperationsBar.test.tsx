@@ -31,6 +31,7 @@ function MemberCountProbe() {
 describe('OperationsBar', () => {
   it('保存ボタンを押すとstorageへ保存しisDirtyをfalseにする（1.5 保存・復元）', async () => {
     const storage = noopStorage();
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     const user = userEvent.setup();
     render(
       <AppStateProvider storage={noopStorage(JSON.stringify({ version: 1, members: [] }))}>
@@ -43,6 +44,7 @@ describe('OperationsBar', () => {
 
     expect(storage.save).toHaveBeenCalledWith(JSON.stringify({ version: 1, members: [] }));
     expect(screen.getByTestId('is-dirty').textContent).toBe('false');
+    expect(alertSpy).toHaveBeenCalledWith('保存しました。');
   });
 
   it('JSONエクスポートボタンを押すとダウンロードさせる（1.5 JSONエクスポート）', async () => {
@@ -82,7 +84,8 @@ describe('OperationsBar', () => {
     expect(memberCountText()).toBe('1');
   });
 
-  it('不正な形式のファイルを選択するとエラーメッセージが表示され、フォーメーションは変更されない（2.4 インポート失敗）', async () => {
+  it('不正な形式のファイルを選択するとエラーダイアログが表示され、フォーメーションは変更されない（2.4 インポート失敗）', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     const fileIO = fakeFileIO({ read: vi.fn().mockResolvedValue('not json') });
     const user = userEvent.setup();
     render(
@@ -95,7 +98,9 @@ describe('OperationsBar', () => {
     const file = new File(['not json'], 'invalid.json', { type: 'application/json' });
     await user.upload(screen.getByLabelText('JSONインポート'), file);
 
-    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(alertSpy).toHaveBeenCalledWith(
+      '不正なファイルです。フォーメーションのJSONファイルを選択してください。',
+    );
     expect(memberCountText()).toBe('0');
   });
 });

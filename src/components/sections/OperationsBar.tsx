@@ -6,7 +6,6 @@ import { saveFormation } from '../../application/saveFormation';
 import type { FormationFileIO, FormationStorage } from '../../application/ports';
 import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
-import { ErrorMessage } from '../parts/ErrorMessage';
 import './OperationsBar.css';
 
 type OperationsBarProps = {
@@ -14,12 +13,13 @@ type OperationsBarProps = {
   fileIO: FormationFileIO;
 };
 
+const SAVE_COMPLETE_MESSAGE = '保存しました。';
 const IMPORT_ERROR_MESSAGE =
   '不正なファイルです。フォーメーションのJSONファイルを選択してください。';
 
 /**
  * 操作 UI（1.4 画面構成）。保存・JSON エクスポート・インポートをユースケースへ結線し、
- * 未保存警告（2.3）とエラーメッセージ表示（2.4）を担う。
+ * 未保存警告・保存完了通知・インポートエラー通知（2.4）を担う。
  */
 export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
   const state = useAppState();
@@ -30,6 +30,7 @@ export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
   const handleSave = () => {
     saveFormation(state.formation, storage);
     dispatch({ type: 'MARK_SAVED' });
+    window.alert(SAVE_COMPLETE_MESSAGE);
   };
 
   const handleExport = () => {
@@ -44,7 +45,7 @@ export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
     }
     const formation = await importFormation(file, fileIO);
     if (formation === null) {
-      dispatch({ type: 'SET_ERROR', message: IMPORT_ERROR_MESSAGE });
+      window.alert(IMPORT_ERROR_MESSAGE);
       return;
     }
     dispatch({ type: 'REPLACE_FORMATION', formation });
@@ -64,7 +65,6 @@ export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
           <input type="file" hidden accept="application/json,.json" onChange={handleImportChange} />
         </Button>
       </div>
-      <ErrorMessage />
     </div>
   );
 }

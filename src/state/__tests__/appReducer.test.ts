@@ -126,25 +126,4 @@ describe('appReducer', () => {
     expect(next.isDirty).toBe(false);
   });
 
-  it('SET_ERROR / CLEAR_ERROR: エラーメッセージを設定・クリアする（2.4 インポート失敗）', () => {
-    const state = createInitialAppState({ members: [] });
-
-    const withError = appReducer(state, { type: 'SET_ERROR', message: '不正なファイルです' });
-    expect(withError.errorMessage).toBe('不正なファイルです');
-
-    const cleared = appReducer(withError, { type: 'CLEAR_ERROR' });
-    expect(cleared.errorMessage).toBeNull();
-  });
-
-  it('エラー表示中に別の操作をすると、その操作と同時にエラーメッセージがクリアされる（2.4 インポート失敗）', () => {
-    const state: AppState = {
-      ...createInitialAppState({ members: [] }),
-      errorMessage: '不正なファイルです',
-    };
-
-    const next = appReducer(state, { type: 'ADD_MEMBER', id: 'id-1' });
-
-    expect(next.errorMessage).toBeNull();
-    expect(next.formation.members).toHaveLength(1);
-  });
 });

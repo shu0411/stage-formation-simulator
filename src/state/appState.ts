@@ -6,7 +6,6 @@ export type AppState = {
   selectedMemberId: string | null;
   isEditorOpen: boolean;
   isDirty: boolean;
-  errorMessage: string | null;
 };
 
 export type AppAction =
@@ -18,9 +17,7 @@ export type AppAction =
   | { type: 'SELECT_MEMBER'; id: string | null }
   | { type: 'OPEN_EDITOR' }
   | { type: 'CLOSE_EDITOR' }
-  | { type: 'MARK_SAVED' }
-  | { type: 'SET_ERROR'; message: string }
-  | { type: 'CLEAR_ERROR' };
+  | { type: 'MARK_SAVED' };
 
 export function createInitialAppState(formation: Formation): AppState {
   return {
@@ -28,6 +25,5 @@ export function createInitialAppState(formation: Formation): AppState {
     selectedMemberId: null,
     isEditorOpen: false,
     isDirty: false,
-    errorMessage: null,
   };
 }
