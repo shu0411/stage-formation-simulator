@@ -1,4 +1,6 @@
 import { NumberField } from './NumberField';
+import { frontBackSpinnerLabels } from './frontBackSpinnerLabels';
+import { Y_AXIS_SCALE } from '../../domain/stageConstants';
 import type { Member } from '../../domain/types';
 
 type MemberPositionInputProps = {
@@ -20,6 +22,8 @@ const LARGE_POSITION_STEP = 1;
  * 操作のたびに呼ぶことで即座に確定する。
  */
 export function MemberPositionInput({ member, onSubmit }: MemberPositionInputProps) {
+  const yLabels = frontBackSpinnerLabels(Y_AXIS_SCALE.direction);
+
   return (
     <>
       <NumberField
@@ -29,8 +33,8 @@ export function MemberPositionInput({ member, onSubmit }: MemberPositionInputPro
         disabled={member === null}
         step={POSITION_STEP}
         largeStep={LARGE_POSITION_STEP}
-        incrementLabel="右へ"
-        decrementLabel="左へ"
+        incrementLabel="上手へ"
+        decrementLabel="下手へ"
         onValueCommitted={(value) => {
           if (member !== null && value !== null) {
             onSubmit(value, member.y);
@@ -44,8 +48,8 @@ export function MemberPositionInput({ member, onSubmit }: MemberPositionInputPro
         disabled={member === null}
         step={POSITION_STEP}
         largeStep={LARGE_POSITION_STEP}
-        incrementLabel="前へ"
-        decrementLabel="後ろへ"
+        incrementLabel={yLabels.increment}
+        decrementLabel={yLabels.decrement}
         onValueCommitted={(value) => {
           if (member !== null && value !== null) {
             onSubmit(member.x, value);

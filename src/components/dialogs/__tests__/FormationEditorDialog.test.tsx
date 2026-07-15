@@ -198,7 +198,7 @@ describe('FormationEditorDialog', () => {
       renderDialog(formationJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
-      await user.click(screen.getByRole('button', { name: '右へ' }));
+      await user.click(screen.getByRole('button', { name: '上手へ' }));
 
       expect(screen.getByLabelText('左右')).toHaveValue('0.05');
     });

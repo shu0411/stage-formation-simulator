@@ -86,7 +86,7 @@ describe('MemberPositionInput', () => {
     const user = userEvent.setup();
     render(<MemberPositionInput member={member} onSubmit={onSubmit} />);
 
-    await user.click(screen.getByRole('button', { name: '右へ' }));
+    await user.click(screen.getByRole('button', { name: '上手へ' }));
 
     expect(onSubmit).toHaveBeenCalledWith(1.05, 2);
   });
