@@ -29,6 +29,7 @@ export function MemberNameInput({ member, onSubmit }: MemberNameInputProps) {
   return (
     <TextField
       size="small"
+      fullWidth
       label="メンバー名"
       value={draftName}
       disabled={member === null}

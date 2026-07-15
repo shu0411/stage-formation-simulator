@@ -1,17 +1,5 @@
-.formation-editor-dialog__toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
+.formation-editor-dialog__controls {
   margin-top: 0.5rem;
-}
-
-.formation-editor-dialog__member-fields {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  margin-top: 0.75rem;
 }
 
 .formation-editor-dialog__svg {

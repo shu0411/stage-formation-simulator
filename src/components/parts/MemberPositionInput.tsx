@@ -1,7 +1,11 @@
+import Grid from '@mui/material/Grid';
 import { NumberField } from './NumberField';
 import { frontBackSpinnerLabels } from './frontBackSpinnerLabels';
 import { Y_AXIS_SCALE } from '../../domain/stageConstants';
 import type { Member } from '../../domain/types';
+
+/** 入力フィールドのグリッドセル幅（1.6 メンバーの選択欄と揃える。スマホは1列、PCは3列）。 */
+const FIELD_GRID_SIZE = { xs: 12, sm: 4 } as const;
 
 type MemberPositionInputProps = {
   member: Member | null;
@@ -26,36 +30,42 @@ export function MemberPositionInput({ member, onSubmit }: MemberPositionInputPro
 
   return (
     <>
-      <NumberField
-        label="左右"
-        size="small"
-        value={member?.x ?? null}
-        disabled={member === null}
-        step={POSITION_STEP}
-        largeStep={LARGE_POSITION_STEP}
-        incrementLabel="上手へ"
-        decrementLabel="下手へ"
-        onValueCommitted={(value) => {
-          if (member !== null && value !== null) {
-            onSubmit(value, member.y);
-          }
-        }}
-      />
-      <NumberField
-        label="前後"
-        size="small"
-        value={member?.y ?? null}
-        disabled={member === null}
-        step={POSITION_STEP}
-        largeStep={LARGE_POSITION_STEP}
-        incrementLabel={yLabels.increment}
-        decrementLabel={yLabels.decrement}
-        onValueCommitted={(value) => {
-          if (member !== null && value !== null) {
-            onSubmit(member.x, value);
-          }
-        }}
-      />
+      <Grid size={FIELD_GRID_SIZE}>
+        <NumberField
+          label="左右"
+          size="small"
+          fullWidth
+          value={member?.x ?? null}
+          disabled={member === null}
+          step={POSITION_STEP}
+          largeStep={LARGE_POSITION_STEP}
+          incrementLabel="上手へ"
+          decrementLabel="下手へ"
+          onValueCommitted={(value) => {
+            if (member !== null && value !== null) {
+              onSubmit(value, member.y);
+            }
+          }}
+        />
+      </Grid>
+      <Grid size={FIELD_GRID_SIZE}>
+        <NumberField
+          label="前後"
+          size="small"
+          fullWidth
+          value={member?.y ?? null}
+          disabled={member === null}
+          step={POSITION_STEP}
+          largeStep={LARGE_POSITION_STEP}
+          incrementLabel={yLabels.increment}
+          decrementLabel={yLabels.decrement}
+          onValueCommitted={(value) => {
+            if (member !== null && value !== null) {
+              onSubmit(member.x, value);
+            }
+          }}
+        />
+      </Grid>
     </>
   );
 }

@@ -13,6 +13,7 @@ type NumberFieldProps = BaseNumberField.Root.Props & {
   incrementLabel?: string;
   /** 減少ボタンの aria-label（同じ画面に複数並べる場合に区別できるようにする）。 */
   decrementLabel?: string;
+  fullWidth?: boolean;
 };
 
 /**
@@ -27,6 +28,7 @@ export function NumberField({
   size = 'medium',
   incrementLabel = '増加',
   decrementLabel = '減少',
+  fullWidth = false,
   ...other
 }: NumberFieldProps) {
   const generatedId = React.useId();
@@ -36,7 +38,13 @@ export function NumberField({
     <BaseNumberField.Root
       {...other}
       render={(props, state) => (
-        <FormControl size={size} ref={props.ref} disabled={state.disabled} variant="outlined">
+        <FormControl
+          size={size}
+          ref={props.ref}
+          disabled={state.disabled}
+          variant="outlined"
+          fullWidth={fullWidth}
+        >
           {props.children}
         </FormControl>
       )}

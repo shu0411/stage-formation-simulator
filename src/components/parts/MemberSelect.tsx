@@ -14,6 +14,7 @@ export function MemberSelect({ members, selectedMemberId, onSelect }: MemberSele
     <TextField
       select
       size="small"
+      fullWidth
       label="メンバーを選択"
       value={selectedMemberId ?? ''}
       disabled={members.length === 0}
