@@ -142,4 +142,65 @@ describe('FormationEditorDialog', () => {
       expect(screen.getByLabelText('メンバー名')).toHaveValue('メンバー1');
     });
   });
+
+  describe('立ち位置変更（数値入力）', () => {
+    function formationJsonWithOneMember() {
+      return JSON.stringify({
+        version: 1,
+        members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
+      });
+    }
+
+    it('メンバーが未選択のとき、座標の数値入力欄は無効化される', () => {
+      renderDialog(formationJsonWithOneMember());
+
+      expect(screen.getByLabelText('左右')).toBeDisabled();
+      expect(screen.getByLabelText('前後')).toBeDisabled();
+    });
+
+    it('メンバーを選択すると、数値入力欄にそのメンバーの現在の座標が表示される', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithOneMember());
+
+      await user.click(screen.getByTestId('member-id-1'));
+
+      expect(screen.getByLabelText('左右')).toHaveValue('0');
+      expect(screen.getByLabelText('前後')).toHaveValue('0');
+    });
+
+    it('数値入力欄に値を入力して確定すると、2Dエディターと3Dビューへ反映される座標が変わる', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithOneMember());
+
+      await user.click(screen.getByTestId('member-id-1'));
+      const input = screen.getByLabelText('左右');
+      await user.clear(input);
+      await user.type(input, '3');
+      await user.tab();
+
+      expect(screen.getByLabelText('左右')).toHaveValue('3');
+    });
+
+    it('数値入力欄に不正な値（空文字）を入力して確定すると、座標は変更されず元の値のままになる', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithOneMember());
+
+      await user.click(screen.getByTestId('member-id-1'));
+      const input = screen.getByLabelText('左右');
+      await user.clear(input);
+      await user.tab();
+
+      expect(screen.getByLabelText('左右')).toHaveValue('0');
+    });
+
+    it('数値入力欄の増加ボタンをクリックすると、クリックのたびに座標が反映される', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithOneMember());
+
+      await user.click(screen.getByTestId('member-id-1'));
+      await user.click(screen.getByRole('button', { name: '左右を増加' }));
+
+      expect(screen.getByLabelText('左右')).toHaveValue('0.05');
+    });
+  });
 });

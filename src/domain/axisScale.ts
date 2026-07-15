@@ -19,5 +19,8 @@ export function toMeters(value: number, scale: AxisScale): number {
 
 /** 基準位置からの符号付き距離（メートル）を値に変換する（toMeters の逆変換）。 */
 export function fromMeters(meters: number, scale: AxisScale): number {
-  return scale.referenceValue + (meters / scale.metersPerUnit) * scale.direction;
+  const value = scale.referenceValue + (meters / scale.metersPerUnit) * scale.direction;
+  // 除算・加算による2進浮動小数点の丸め誤差（例: -0.7000000000000002）を打ち消す。
+  // `+ 0` は基準値のとき -0 になるのを防ぐ（toMeters と同じ理由）。
+  return Math.round(value * 1e9) / 1e9 + 0;
 }

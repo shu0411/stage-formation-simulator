@@ -74,14 +74,17 @@ describe('moveMember', () => {
     expect(next.members[0].y).toBeCloseTo(-2.8);
   });
 
-  it('ステージ範囲外の座標を指定した場合はステージ端に丸める', () => {
+  it('ステージ範囲外の座標を指定した場合、範囲内に収まる0.05単位の値に丸める（端そのものが0.05単位でない場合は端にしない）', () => {
     const xMax = fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE);
     const yFront = fromMeters(0, Y_AXIS_SCALE);
 
     const next = moveMember(formation, 'id-1', xMax + 5, yFront + 5);
 
     expect(next.members[0].id).toBe('id-1');
-    expect(next.members[0].x).toBeCloseTo(xMax);
+    // xMax(6.2222...) は0.05単位でないため、範囲内に収まる6.2に丸められる
+    expect(next.members[0].x).toBeCloseTo(6.2);
+    expect(next.members[0].x).toBeLessThanOrEqual(xMax);
+    // yFront(2) は既に0.05単位のため、端そのものになる
     expect(next.members[0].y).toBeCloseTo(yFront);
   });
 

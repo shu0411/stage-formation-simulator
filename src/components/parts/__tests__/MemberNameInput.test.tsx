@@ -44,4 +44,12 @@ describe('MemberNameInput', () => {
 
     expect(onSubmit).toHaveBeenCalledWith('あいり');
   });
+
+  it('メンバーが未選択のとき、名前欄は無効化される', () => {
+    const onSubmit = vi.fn();
+    render(<MemberNameInput member={null} onSubmit={onSubmit} />);
+
+    expect(screen.getByLabelText('メンバー名')).toBeDisabled();
+    expect(screen.getByLabelText('メンバー名')).toHaveValue('');
+  });
 });

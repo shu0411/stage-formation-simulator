@@ -61,7 +61,10 @@ describe('appReducer', () => {
 
     const next = appReducer(state, { type: 'MOVE_MEMBER', id: 'id-1', x: 100, y: 0 });
 
-    expect(next.formation.members[0].x).toBeCloseTo(fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE));
+    // ステージ端(fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE) = 6.2222...)は0.05単位でないため、
+    // 範囲内に収まる6.2に丸められる（domain/coordinates.ts の snapPositionWithinStage）。
+    expect(next.formation.members[0].x).toBeCloseTo(6.2);
+    expect(next.formation.members[0].x).toBeLessThanOrEqual(fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE));
     expect(next.isDirty).toBe(true);
   });
 

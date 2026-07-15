@@ -28,4 +28,11 @@ describe('fromMeters（toMetersの逆変換）', () => {
       expect(fromMeters(toMeters(value, scale), scale)).toBeCloseTo(value);
     }
   });
+
+  it('toMeters・fromMetersの往復で生じる浮動小数点誤差を打ち消し、元の値と完全に一致する', () => {
+    const scale: AxisScale = { referenceValue: 2, metersPerUnit: 0.9, direction: -1 };
+    for (const value of [-0.7, -0.4, 2.25, -1, 1]) {
+      expect(fromMeters(toMeters(value, scale), scale)).toBe(value);
+    }
+  });
 });

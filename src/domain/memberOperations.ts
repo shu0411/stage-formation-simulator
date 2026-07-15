@@ -1,4 +1,4 @@
-import { clampPosition, snapPosition } from './coordinates';
+import { snapPositionWithinStage } from './coordinates';
 import { fromMeters } from './axisScale';
 import { STAGE_DEPTH, X_AXIS_SCALE, Y_AXIS_SCALE } from './stageConstants';
 import type { Formation } from './types';
@@ -24,11 +24,10 @@ export function removeMember(formation: Formation, id: string): Formation {
 
 /**
  * 指定した ID のメンバーの立ち位置を更新する（1.5 立ち位置変更）。
- * 0.05 単位に丸めたうえで、範囲外はステージ端に丸める。
+ * 0.05 単位に丸めたうえで、範囲外は範囲内に収まる 0.05 単位の値に丸める。
  */
 export function moveMember(formation: Formation, id: string, x: number, y: number): Formation {
-  const snapped = snapPosition(x, y);
-  const position = clampPosition(snapped.x, snapped.y);
+  const position = snapPositionWithinStage(x, y);
   return {
     members: formation.members.map((member) =>
       member.id === id ? { ...member, ...position } : member,
