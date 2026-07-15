@@ -24,14 +24,28 @@ function IsEditorOpenProbe() {
   return <p data-testid="is-editor-open">{String(state.isEditorOpen)}</p>;
 }
 
+function FormationMemberCountProbe() {
+  const state = useAppState();
+  return <p data-testid="formation-member-count">{state.formation.members.length}</p>;
+}
+
 function renderDialog(json: string | null = null) {
   return render(
     <AppStateProvider storage={noopStorage(json)}>
       <OpenEditorOnMount />
       <IsEditorOpenProbe />
+      <FormationMemberCountProbe />
       <FormationEditorDialog />
     </AppStateProvider>,
   );
+}
+
+function clickBackdrop() {
+  const backdrop = document.querySelector('.MuiModal-backdrop');
+  if (backdrop === null) {
+    throw new Error('backdrop element not found');
+  }
+  return userEvent.click(backdrop);
 }
 
 describe('FormationEditorDialog', () => {
@@ -49,16 +63,74 @@ describe('FormationEditorDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('閉じる操作をすると元の画面に戻り、編集内容は保持される', async () => {
+  it('確定ボタンを押すと編集内容がアプリ全体の状態へ反映され、ダイアログが閉じる（2.3 編集セッションと確定・破棄）', async () => {
     const user = userEvent.setup();
     renderDialog();
 
     await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
-    expect(screen.getByRole('img', { name: 'ステージの俯瞰図' })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: '閉じる' }));
+    await user.click(screen.getByRole('button', { name: '確定' }));
 
     expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
+    expect(screen.getByTestId('formation-member-count').textContent).toBe('1');
+  });
+
+  it('キャンセルボタンを押すと編集内容は反映されずダイアログが閉じる（2.3 編集セッションと確定・破棄）', async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
+    await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+
+    expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
+    expect(screen.getByTestId('formation-member-count').textContent).toBe('0');
+  });
+
+  describe('ダイアログ外クリック・Escapeキーでの破棄（2.3 編集セッションと確定・破棄）', () => {
+    it('編集していない状態でダイアログ外をクリックすると、確認なしに閉じる', async () => {
+      const confirmSpy = vi.spyOn(window, 'confirm');
+      renderDialog();
+
+      await clickBackdrop();
+
+      expect(confirmSpy).not.toHaveBeenCalled();
+      expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
+    });
+
+    it('編集した状態でダイアログ外をクリックすると確認ダイアログが表示され、承認すると反映せずに閉じる', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
+      await clickBackdrop();
+
+      expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
+      expect(screen.getByTestId('formation-member-count').textContent).toBe('0');
+    });
+
+    it('確認ダイアログでキャンセルすると、ダイアログは閉じず編集内容も保持される', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
+      await clickBackdrop();
+
+      expect(screen.getByTestId('is-editor-open').textContent).toBe('true');
+      expect(screen.getByTestId(/^member-/)).toBeInTheDocument();
+    });
+
+    it('編集した状態でEscapeキーを押すと、ダイアログ外クリックと同様に確認のうえ閉じる', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
+      await user.keyboard('{Escape}');
+
+      expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
+      expect(screen.getByTestId('formation-member-count').textContent).toBe('0');
+    });
   });
 
   describe('メンバー追加', () => {
@@ -209,7 +281,7 @@ describe('FormationEditorDialog', () => {
       expect(screen.getByLabelText('前後')).toHaveValue('0');
     });
 
-    it('数値入力欄に値を入力して確定すると、2Dエディターと3Dビューへ反映される座標が変わる', async () => {
+    it('数値入力欄に値を入力して確定すると、2Dエディター内の座標が変わる', async () => {
       const user = userEvent.setup();
       renderDialog(formationJsonWithOneMember());
 

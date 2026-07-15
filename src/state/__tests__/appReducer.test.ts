@@ -1,95 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { appReducer } from '../appReducer';
 import { createInitialAppState } from '../appState';
-import { fromMeters } from '../../domain/axisScale';
-import { STAGE_HALF_WIDTH, X_AXIS_SCALE } from '../../domain/stageConstants';
 import type { AppState } from '../appState';
 
 describe('appReducer', () => {
-  it('ADD_MEMBER: メンバーを追加しisDirtyをtrueにする（1.5 メンバー追加）', () => {
-    const state = createInitialAppState({ members: [] });
-
-    const next = appReducer(state, { type: 'ADD_MEMBER', id: 'id-1' });
-
-    expect(next.formation.members).toHaveLength(1);
-    expect(next.formation.members[0]).toMatchObject({ id: 'id-1', name: 'メンバー1' });
-    expect(next.isDirty).toBe(true);
-  });
-
-  it('ADD_MEMBER: 追加したメンバーを選択状態にする（1.5 メンバー追加、1.6 メンバーの選択）', () => {
-    const state = createInitialAppState({
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
-    });
-
-    const next = appReducer(state, { type: 'ADD_MEMBER', id: 'id-2' });
-
-    expect(next.selectedMemberId).toBe('id-2');
-  });
-
-  it('REMOVE_MEMBER: メンバーを削除しisDirtyをtrueにする（1.5 メンバー削除）', () => {
-    const state: AppState = {
-      ...createInitialAppState({ members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] }),
-    };
-
-    const next = appReducer(state, { type: 'REMOVE_MEMBER', id: 'id-1' });
-
-    expect(next.formation.members).toEqual([]);
-    expect(next.isDirty).toBe(true);
-  });
-
-  it('REMOVE_MEMBER: 選択中のメンバーを削除すると選択が解除される', () => {
-    const state: AppState = {
-      ...createInitialAppState({ members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] }),
-      selectedMemberId: 'id-1',
-    };
-
-    const next = appReducer(state, { type: 'REMOVE_MEMBER', id: 'id-1' });
-
-    expect(next.selectedMemberId).toBeNull();
-  });
-
-  it('REMOVE_MEMBER: 選択中でないメンバーを削除しても選択は解除されない', () => {
-    const state: AppState = {
-      ...createInitialAppState({
-        members: [
-          { id: 'id-1', name: 'メンバー1', x: 0, y: 0 },
-          { id: 'id-2', name: 'メンバー2', x: 0, y: 0 },
-        ],
-      }),
-      selectedMemberId: 'id-2',
-    };
-
-    const next = appReducer(state, { type: 'REMOVE_MEMBER', id: 'id-1' });
-
-    expect(next.selectedMemberId).toBe('id-2');
-  });
-
-  it('MOVE_MEMBER: 立ち位置を更新しisDirtyをtrueにする（1.5 立ち位置変更）', () => {
-    const state = createInitialAppState({
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
-    });
-
-    const next = appReducer(state, { type: 'MOVE_MEMBER', id: 'id-1', x: 100, y: 0 });
-
-    // ステージ端(fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE) = 6.2222...)は0.05単位でないため、
-    // 範囲内に収まる6.2に丸められる（domain/coordinates.ts の snapPositionWithinStage）。
-    expect(next.formation.members[0].x).toBeCloseTo(6.2);
-    expect(next.formation.members[0].x).toBeLessThanOrEqual(fromMeters(STAGE_HALF_WIDTH, X_AXIS_SCALE));
-    expect(next.isDirty).toBe(true);
-  });
-
-  it('RENAME_MEMBER: 名前を更新しisDirtyをtrueにする（1.5 メンバー名編集）', () => {
-    const state = createInitialAppState({
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
-    });
-
-    const next = appReducer(state, { type: 'RENAME_MEMBER', id: 'id-1', name: 'あいり' });
-
-    expect(next.formation.members[0].name).toBe('あいり');
-    expect(next.isDirty).toBe(true);
-  });
-
-  it('REPLACE_FORMATION: フォーメーションを置き換えisDirtyをtrueにする（1.5 JSONインポート）', () => {
+  it('REPLACE_FORMATION: フォーメーションを置き換えisDirtyをtrueにする（1.5 JSONインポート、2Dエディター確定）', () => {
     const state = createInitialAppState({ members: [] });
     const imported = { members: [{ id: 'id-9', name: 'メンバー9', x: 1, y: 1 }] };
 
@@ -97,15 +12,6 @@ describe('appReducer', () => {
 
     expect(next.formation).toEqual(imported);
     expect(next.isDirty).toBe(true);
-  });
-
-  it('SELECT_MEMBER: 選択中メンバーを更新する（isDirtyは変化しない、1.6 メンバーの選択）', () => {
-    const state = createInitialAppState({ members: [] });
-
-    const next = appReducer(state, { type: 'SELECT_MEMBER', id: 'id-1' });
-
-    expect(next.selectedMemberId).toBe('id-1');
-    expect(next.isDirty).toBe(false);
   });
 
   it('OPEN_EDITOR / CLOSE_EDITOR: ポップアップの開閉状態を切り替える（1.5 2Dエディター表示）', () => {
@@ -125,5 +31,4 @@ describe('appReducer', () => {
 
     expect(next.isDirty).toBe(false);
   });
-
 });

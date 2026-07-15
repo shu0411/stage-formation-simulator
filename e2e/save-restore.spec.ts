@@ -15,7 +15,7 @@ test.describe('保存・復元', () => {
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
     await page.getByRole('button', { name: 'メンバーを追加' }).click();
-    await page.getByRole('button', { name: '閉じる' }).click();
+    await page.getByRole('button', { name: '確定' }).click();
 
     await page.getByRole('button', { name: '保存' }).click();
     await page.reload();
@@ -30,7 +30,7 @@ test.describe('保存・復元', () => {
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
     await page.getByRole('button', { name: 'メンバーを追加' }).click();
-    await page.getByRole('button', { name: '閉じる' }).click();
+    await page.getByRole('button', { name: '確定' }).click();
 
     // 警告(beforeunload)がダイアログをキャンセルすると reload() 自体のナビゲーションは
     // 完了しないため、reload() の完了は待たずダイアログイベントの発生のみを検証する

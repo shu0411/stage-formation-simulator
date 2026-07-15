@@ -16,7 +16,16 @@ function TestConsumer() {
     <div>
       <p data-testid="member-count">{state.formation.members.length}</p>
       <p data-testid="is-dirty">{String(state.isDirty)}</p>
-      <button onClick={() => dispatch({ type: 'ADD_MEMBER', id: 'id-1' })}>追加</button>
+      <button
+        onClick={() =>
+          dispatch({
+            type: 'REPLACE_FORMATION',
+            formation: { members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] },
+          })
+        }
+      >
+        反映
+      </button>
     </div>
   );
 }
@@ -67,7 +76,7 @@ describe('AppStateProvider', () => {
     );
 
     await act(async () => {
-      await user.click(screen.getByText('追加'));
+      await user.click(screen.getByText('反映'));
     });
 
     expect(screen.getByTestId('member-count').textContent).toBe('1');

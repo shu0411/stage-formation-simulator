@@ -15,7 +15,7 @@ test.describe('3D プレビュー', () => {
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
     await page.getByRole('button', { name: 'メンバーを追加' }).click();
-    await page.getByRole('button', { name: '閉じる' }).click();
+    await page.getByRole('button', { name: '確定' }).click();
 
     const label = page.locator('.person-model__label');
     await expect(label).toHaveCount(1);

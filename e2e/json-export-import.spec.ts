@@ -10,7 +10,7 @@ test.describe('JSON エクスポート・インポート', () => {
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
     await page.getByRole('button', { name: 'メンバーを追加' }).click();
-    await page.getByRole('button', { name: '閉じる' }).click();
+    await page.getByRole('button', { name: '確定' }).click();
 
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'JSONエクスポート' }).click();
@@ -31,7 +31,7 @@ test.describe('JSON エクスポート・インポート', () => {
     await page.getByLabel('2D編集ポップアップを開く').click();
     await page.getByRole('button', { name: 'メンバーを追加' }).click();
     await page.getByRole('button', { name: 'メンバーを追加' }).click();
-    await page.getByRole('button', { name: '閉じる' }).click();
+    await page.getByRole('button', { name: '確定' }).click();
 
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'JSONエクスポート' }).click();
@@ -51,20 +51,27 @@ test.describe('JSON エクスポート・インポート', () => {
     await expect(page.locator('.person-model__label')).toHaveCount(2);
   });
 
-  test('不正な形式のファイルを選択すると、エラーメッセージが表示され現在のフォーメーションは変更されない', async ({
+  test('不正な形式のファイルを選択すると、エラーダイアログが表示され現在のフォーメーションは変更されない', async ({
     page,
   }) => {
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
     await page.getByRole('button', { name: 'メンバーを追加' }).click();
-    await page.getByRole('button', { name: '閉じる' }).click();
+    await page.getByRole('button', { name: '確定' }).click();
 
     const invalidFilePath = join(tmpdir(), `invalid-formation-${Date.now()}.json`);
     writeFileSync(invalidFilePath, 'これはJSONではありません');
 
+    const dialogPromise = page.waitForEvent('dialog');
     await page.getByLabel('JSONインポート').setInputFiles(invalidFilePath);
+    const dialog = await dialogPromise;
 
-    await expect(page.getByRole('alert')).toBeVisible();
+    expect(dialog.type()).toBe('alert');
+    expect(dialog.message()).toBe(
+      '不正なファイルです。フォーメーションのJSONファイルを選択してください。',
+    );
+    await dialog.accept();
+
     await expect(page.locator('.person-model__label')).toHaveCount(1);
   });
 });

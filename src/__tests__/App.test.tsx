@@ -35,14 +35,14 @@ describe('App', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('サムネイルをクリックすると2D編集ポップアップが開き、閉じる操作で閉じる（1.5 2Dエディター表示）', async () => {
+  it('サムネイルをクリックすると2D編集ポップアップが開き、キャンセル操作で閉じる（1.5 2Dエディター表示）', async () => {
     const user = userEvent.setup();
     renderApp();
 
     await user.click(screen.getByLabelText('2D編集ポップアップを開く'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '閉じる' }));
+    await user.click(screen.getByRole('button', { name: 'キャンセル' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
