@@ -5,6 +5,7 @@ import DialogContent from '@mui/material/DialogContent';
 import { FormationStageSvg } from '../parts/FormationStageSvg';
 import { MemberNameInput } from '../parts/MemberNameInput';
 import { MemberPositionInput } from '../parts/MemberPositionInput';
+import { MemberSelect } from '../parts/MemberSelect';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
 import './FormationEditorDialog.css';
 
@@ -68,6 +69,11 @@ export function FormationEditorDialog() {
           >
             削除
           </Button>
+          <MemberSelect
+            members={state.formation.members}
+            selectedMemberId={state.selectedMemberId}
+            onSelect={(id) => dispatch({ type: 'SELECT_MEMBER', id })}
+          />
         </div>
         <div className="formation-editor-dialog__member-fields">
           <MemberNameInput

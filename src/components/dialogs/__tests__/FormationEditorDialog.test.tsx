@@ -83,6 +83,36 @@ describe('FormationEditorDialog', () => {
     });
   });
 
+  describe('メンバー選択（プルダウン）', () => {
+    function formationJsonWithTwoMembers() {
+      return JSON.stringify({
+        version: 1,
+        members: [
+          { id: 'id-1', name: 'メンバー1', x: 0, y: 0 },
+          { id: 'id-2', name: 'メンバー2', x: 1, y: 1 },
+        ],
+      });
+    }
+
+    it('メンバーがいないとき、プルダウンは無効化される', () => {
+      renderDialog();
+
+      expect(screen.getByLabelText('メンバーを選択')).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('プルダウンでメンバーを選ぶと、そのメンバーが選択状態になる（1.6 メンバーの選択）', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithTwoMembers());
+
+      await user.click(screen.getByLabelText('メンバーを選択'));
+      await user.click(screen.getByRole('option', { name: 'メンバー2' }));
+
+      expect(screen.getByLabelText('メンバー名')).toHaveValue('メンバー2');
+      expect(screen.getByLabelText('左右')).toHaveValue('1');
+      expect(screen.getByLabelText('前後')).toHaveValue('1');
+    });
+  });
+
   describe('メンバー削除', () => {
     function formationJsonWithOneMember() {
       return JSON.stringify({
