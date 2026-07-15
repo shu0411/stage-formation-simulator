@@ -1,19 +1,14 @@
 import { snapPositionWithinStage } from './coordinates';
-import { fromMeters } from './axisScale';
-import { STAGE_DEPTH, X_AXIS_SCALE, Y_AXIS_SCALE } from './stageConstants';
 import type { Formation } from './types';
 
-/** ステージ中央の座標（2.2 メンバー追加時の初期位置）。 */
-const STAGE_CENTER = {
-  x: X_AXIS_SCALE.referenceValue,
-  y: fromMeters(STAGE_DEPTH / 2, Y_AXIS_SCALE),
-};
+/** 原点の座標（2.2 メンバー追加時の初期位置）。 */
+const ORIGIN = { x: 0, y: 0 };
 
-/** 新しいメンバーをステージ中央に追加する（1.5 メンバー追加）。id は呼び出し側で採番する。 */
+/** 新しいメンバーを原点に追加する（1.5 メンバー追加）。id は呼び出し側で採番する。 */
 export function addMember(formation: Formation, id: string): Formation {
   const name = `メンバー${formation.members.length + 1}`;
   return {
-    members: [...formation.members, { id, name, ...STAGE_CENTER }],
+    members: [...formation.members, { id, name, ...ORIGIN }],
   };
 }
 

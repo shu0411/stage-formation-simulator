@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { addMember, moveMember, removeMember, renameMember } from '../memberOperations';
 import { fromMeters } from '../axisScale';
-import { STAGE_DEPTH, STAGE_HALF_WIDTH, X_AXIS_SCALE, Y_AXIS_SCALE } from '../stageConstants';
+import { STAGE_HALF_WIDTH, X_AXIS_SCALE, Y_AXIS_SCALE } from '../stageConstants';
 import type { Formation } from '../types';
 
-const CENTER_Y = fromMeters(STAGE_DEPTH / 2, Y_AXIS_SCALE);
-
 describe('addMember', () => {
-  it('メンバーが0人のとき、ステージ中央に「メンバー1」を1人追加する（2.2 メンバー追加時の初期位置）', () => {
+  it('メンバーが0人のとき、原点に「メンバー1」を1人追加する（2.2 メンバー追加時の初期位置）', () => {
     const formation: Formation = { members: [] };
 
     const next = addMember(formation, 'id-1');
@@ -15,8 +13,8 @@ describe('addMember', () => {
     expect(next.members).toHaveLength(1);
     expect(next.members[0].id).toBe('id-1');
     expect(next.members[0].name).toBe('メンバー1');
-    expect(next.members[0].x).toBe(X_AXIS_SCALE.referenceValue);
-    expect(next.members[0].y).toBeCloseTo(CENTER_Y);
+    expect(next.members[0].x).toBe(0);
+    expect(next.members[0].y).toBe(0);
   });
 
   it('メンバーがN人のとき、N+1人になり新しいメンバーは連番の名前になる', () => {

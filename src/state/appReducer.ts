@@ -10,7 +10,12 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 
   switch (action.type) {
     case 'ADD_MEMBER':
-      return { ...state, formation: addMember(state.formation, action.id), isDirty: true };
+      return {
+        ...state,
+        formation: addMember(state.formation, action.id),
+        selectedMemberId: action.id,
+        isDirty: true,
+      };
 
     case 'REMOVE_MEMBER':
       return {

@@ -16,6 +16,16 @@ describe('appReducer', () => {
     expect(next.isDirty).toBe(true);
   });
 
+  it('ADD_MEMBER: 追加したメンバーを選択状態にする（1.5 メンバー追加、1.6 メンバーの選択）', () => {
+    const state = createInitialAppState({
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
+    });
+
+    const next = appReducer(state, { type: 'ADD_MEMBER', id: 'id-2' });
+
+    expect(next.selectedMemberId).toBe('id-2');
+  });
+
   it('REMOVE_MEMBER: メンバーを削除しisDirtyをtrueにする（1.5 メンバー削除）', () => {
     const state: AppState = {
       ...createInitialAppState({ members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] }),

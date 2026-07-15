@@ -62,13 +62,24 @@ describe('FormationEditorDialog', () => {
   });
 
   describe('メンバー追加', () => {
-    it('メンバーが0人のとき、追加操作でステージ中央に「メンバー1」が1人配置される', async () => {
+    it('メンバーが0人のとき、追加操作で原点に「メンバー1」が1人配置される', async () => {
       const user = userEvent.setup();
       renderDialog();
 
       await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
 
       expect(screen.getByTestId(/^member-/)).toBeInTheDocument();
+    });
+
+    it('追加したメンバーが選択状態になり、原点の座標がフォームに表示される（1.6 メンバーの選択）', async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
+
+      expect(screen.getByLabelText('メンバー名')).toHaveValue('メンバー1');
+      expect(screen.getByLabelText('左右')).toHaveValue('0');
+      expect(screen.getByLabelText('前後')).toHaveValue('0');
     });
   });
 
