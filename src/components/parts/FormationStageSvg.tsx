@@ -27,7 +27,8 @@ type FormationStageSvgProps = {
   className?: string;
 };
 
-const MEMBER_RADIUS = 0.35;
+const MEMBER_RADIUS = 0.3;
+const MEMBER_FOCUS_RADIUS = MEMBER_RADIUS + 0.12;
 const LABEL_OFFSET = AXIS_LABEL_MARGIN / 2;
 
 /**
@@ -118,22 +119,31 @@ export function FormationStageSvg({
         const point = toSvgPoint(member.x, member.y);
         const selected = member.id === selectedMemberId;
         return (
-          <circle
-            key={member.id}
-            data-testid={`member-${member.id}`}
-            className={selected ? 'member member--selected' : 'member'}
-            cx={point.x}
-            cy={point.y}
-            r={MEMBER_RADIUS}
-            onPointerDown={
-              interactive
-                ? () => {
-                    onSelectMember?.(member.id);
-                    startDrag(member.id);
-                  }
-                : undefined
-            }
-          />
+          <g key={member.id}>
+            <circle
+              className={
+                selected ? 'member-focus-ring member-focus-ring--visible' : 'member-focus-ring'
+              }
+              cx={point.x}
+              cy={point.y}
+              r={MEMBER_FOCUS_RADIUS}
+            />
+            <circle
+              data-testid={`member-${member.id}`}
+              className={selected ? 'member member--selected' : 'member'}
+              cx={point.x}
+              cy={point.y}
+              r={MEMBER_RADIUS}
+              onPointerDown={
+                interactive
+                  ? () => {
+                      onSelectMember?.(member.id);
+                      startDrag(member.id);
+                    }
+                  : undefined
+              }
+            />
+          </g>
         );
       })}
     </svg>

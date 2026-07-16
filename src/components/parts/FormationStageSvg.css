@@ -28,7 +28,21 @@
   cursor: pointer;
 }
 
-.member--selected {
-  fill: #ff9f1c;
-  stroke: #c4670a;
+.member-focus-ring {
+  fill: none;
+  stroke: #333;
+  stroke-width: 0.06;
+  pointer-events: none;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.6);
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out;
+}
+
+.member-focus-ring--visible {
+  opacity: 1;
+  transform: scale(1);
 }
