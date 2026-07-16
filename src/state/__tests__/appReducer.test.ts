@@ -6,7 +6,9 @@ import type { AppState } from '../appState';
 describe('appReducer', () => {
   it('REPLACE_FORMATION: フォーメーションを置き換えisDirtyをtrueにする（1.5 JSONインポート、2Dエディター確定）', () => {
     const state = createInitialAppState({ members: [] });
-    const imported = { members: [{ id: 'id-9', name: 'メンバー9', x: 1, y: 1 }] };
+    const imported = {
+      members: [{ id: 'id-9', name: 'メンバー9', x: 1, y: 1, color: '#ff0000', height: 160 }],
+    };
 
     const next = appReducer(state, { type: 'REPLACE_FORMATION', formation: imported });
 

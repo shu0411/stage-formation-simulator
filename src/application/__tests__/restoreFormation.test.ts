@@ -6,12 +6,12 @@ describe('restoreFormation', () => {
   it('保存データがあれば復元する（1.5 保存・復元）', () => {
     const json = JSON.stringify({
       version: 1,
-      members: [{ id: 'id-1', name: 'メンバー1', x: 1, y: 2 }],
+      members: [{ id: 'id-1', name: 'メンバー1', x: 1, y: 2, color: '#ff0000', height: 170 }],
     });
     const storage: FormationStorage = { save: vi.fn(), load: vi.fn().mockReturnValue(json) };
 
     expect(restoreFormation(storage)).toEqual({
-      members: [{ id: 'id-1', name: 'メンバー1', x: 1, y: 2 }],
+      members: [{ id: 'id-1', name: 'メンバー1', x: 1, y: 2, color: '#ff0000', height: 170 }],
     });
   });
 

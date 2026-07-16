@@ -5,7 +5,14 @@ import { MemberPositionInput } from '../MemberPositionInput';
 import type { Member } from '../../../domain/types';
 
 describe('MemberPositionInput', () => {
-  const member: Member = { id: 'id-1', name: 'メンバー1', x: 1, y: 2 };
+  const member: Member = {
+    id: 'id-1',
+    name: 'メンバー1',
+    x: 1,
+    y: 2,
+    color: '#ff0000',
+    height: 160,
+  };
 
   it('メンバーの現在のX・Y座標を表示する（1.5 立ち位置変更）', () => {
     render(<MemberPositionInput member={member} onSubmit={vi.fn()} />);

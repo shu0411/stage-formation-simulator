@@ -20,7 +20,11 @@ function TestConsumer() {
         onClick={() =>
           dispatch({
             type: 'REPLACE_FORMATION',
-            formation: { members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] },
+            formation: {
+              members: [
+                { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+              ],
+            },
           })
         }
       >
@@ -34,7 +38,7 @@ describe('AppStateProvider', () => {
   it('保存データがあれば起動時に復元し、isDirtyはfalseのままにする（1.5 保存・復元）', () => {
     const json = JSON.stringify({
       version: 1,
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
     });
 
     render(

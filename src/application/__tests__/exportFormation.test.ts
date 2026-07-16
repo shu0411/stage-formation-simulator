@@ -6,7 +6,7 @@ import type { Formation } from '../../domain/types';
 describe('exportFormation', () => {
   it('フォーメーションをシリアライズし、formation.jsonとしてダウンロードさせる（1.5 JSONエクスポート）', () => {
     const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 1, y: 2 }],
+      members: [{ id: 'id-1', name: 'メンバー1', x: 1, y: 2, color: '#ff0000', height: 170 }],
     };
     const fileIO: FormationFileIO = { read: vi.fn(), download: vi.fn() };
 

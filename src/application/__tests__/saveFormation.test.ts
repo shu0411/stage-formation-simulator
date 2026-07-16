@@ -6,7 +6,7 @@ import type { Formation } from '../../domain/types';
 describe('saveFormation', () => {
   it('フォーメーションをシリアライズしてstorageへ保存する（1.5 保存・復元）', () => {
     const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 1, y: 2 }],
+      members: [{ id: 'id-1', name: 'メンバー1', x: 1, y: 2, color: '#ff0000', height: 170 }],
     };
     const storage: FormationStorage = { save: vi.fn(), load: vi.fn() };
 

@@ -5,7 +5,14 @@ import { MemberNameInput } from '../MemberNameInput';
 import type { Member } from '../../../domain/types';
 
 describe('MemberNameInput', () => {
-  const member: Member = { id: 'id-1', name: 'メンバー1', x: 0, y: 0 };
+  const member: Member = {
+    id: 'id-1',
+    name: 'メンバー1',
+    x: 0,
+    y: 0,
+    color: '#ff0000',
+    height: 160,
+  };
 
   it('入力・確定するとonSubmitへ新しい名前を渡す（1.5 メンバー名編集）', async () => {
     const onSubmit = vi.fn();

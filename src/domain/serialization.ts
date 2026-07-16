@@ -1,13 +1,18 @@
+import { clampMemberHeight } from './memberOperations';
 import { snapPositionWithinStage } from './coordinates';
-import { FORMATION_FORMAT_VERSION } from './types';
-import type { Formation, Member } from './types';
+import { DEFAULT_MEMBER_COLOR, DEFAULT_MEMBER_HEIGHT_CM, FORMATION_FORMAT_VERSION } from './types';
+import type { Formation } from './types';
 
 /** フォーメーションを永続化・交換用の JSON 文字列に変換する（2.2 永続化・交換フォーマット）。 */
 export function serializeFormation(formation: Formation): string {
   return JSON.stringify({ version: FORMATION_FORMAT_VERSION, members: formation.members });
 }
 
-function isValidMember(value: unknown): value is Member {
+/**
+ * メンバーとして必須の形式を満たすかを検査する（1.6 保存データの後方互換性）。
+ * color・height は旧形式データに存在しないことを許容し、存在する場合のみ型を検査する。
+ */
+function isValidMember(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
@@ -16,7 +21,9 @@ function isValidMember(value: unknown): value is Member {
     typeof member.id === 'string' &&
     typeof member.name === 'string' &&
     typeof member.x === 'number' &&
-    typeof member.y === 'number'
+    typeof member.y === 'number' &&
+    (member.color === undefined || typeof member.color === 'string') &&
+    (member.height === undefined || typeof member.height === 'number')
   );
 }
 
@@ -46,8 +53,13 @@ export function parseFormationJson(json: string): Formation | null {
   }
 
   const members = candidate.members.map((member) => ({
-    ...member,
-    ...snapPositionWithinStage(member.x, member.y),
+    id: member.id as string,
+    name: member.name as string,
+    color: typeof member.color === 'string' ? member.color : DEFAULT_MEMBER_COLOR,
+    height: clampMemberHeight(
+      typeof member.height === 'number' ? member.height : DEFAULT_MEMBER_HEIGHT_CM,
+    ),
+    ...snapPositionWithinStage(member.x as number, member.y as number),
   }));
   return { members };
 }
