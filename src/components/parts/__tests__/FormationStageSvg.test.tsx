@@ -40,8 +40,8 @@ describe('FormationStageSvg', () => {
   it('メンバーを描画し、選択中のメンバーを視覚的に区別する（1.6 メンバーの選択）', () => {
     const formation: Formation = {
       members: [
-        { id: 'id-1', name: 'メンバー1', x: 0, y: 0 },
-        { id: 'id-2', name: 'メンバー2', x: 1, y: 1 },
+        { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+        { id: 'id-2', name: 'メンバー2', x: 1, y: 1, color: '#00ff00', height: 170 },
       ],
     };
 
@@ -53,9 +53,25 @@ describe('FormationStageSvg', () => {
     );
   });
 
+  it('メンバーを表す円をメンバーのカラーで表示する（1.5 メンバーカラー編集）', () => {
+    const formation: Formation = {
+      members: [
+        { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+        { id: 'id-2', name: 'メンバー2', x: 1, y: 1, color: '#00ff00', height: 170 },
+      ],
+    };
+
+    render(<FormationStageSvg formation={formation} />);
+
+    expect(screen.getByTestId('member-id-1')).toHaveStyle({ fill: '#ff0000' });
+    expect(screen.getByTestId('member-id-2')).toHaveStyle({ fill: '#00ff00' });
+  });
+
   it('interactiveがfalseのときメンバーを押しても選択されない', () => {
     const onSelectMember = vi.fn();
-    const formation: Formation = { members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] };
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
 
     render(
       <FormationStageSvg
@@ -71,7 +87,9 @@ describe('FormationStageSvg', () => {
 
   it('interactiveがtrueのときメンバーを押すと選択される（ドラッグ開始時点で選択し、移動完了を待たない）', () => {
     const onSelectMember = vi.fn();
-    const formation: Formation = { members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] };
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
 
     render(<FormationStageSvg formation={formation} interactive onSelectMember={onSelectMember} />);
     fireEvent.pointerDown(screen.getByTestId('member-id-1'));
@@ -93,7 +111,9 @@ describe('FormationStageSvg', () => {
       toJSON: () => '',
     });
     const onMoveMember = vi.fn();
-    const formation: Formation = { members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }] };
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
 
     render(<FormationStageSvg formation={formation} interactive onMoveMember={onMoveMember} />);
     fireEvent.pointerDown(screen.getByTestId('member-id-1'));

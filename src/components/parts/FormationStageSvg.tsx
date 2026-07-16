@@ -134,6 +134,7 @@ export function FormationStageSvg({
               cx={point.x}
               cy={point.y}
               r={MEMBER_RADIUS}
+              style={{ fill: member.color }}
               onPointerDown={
                 interactive
                   ? () => {
