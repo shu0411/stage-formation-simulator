@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -152,6 +152,8 @@ describe('FormationEditorDialog', () => {
       expect(screen.getByLabelText('メンバー名')).toHaveValue('メンバー1');
       expect(screen.getByLabelText('左右')).toHaveValue('0');
       expect(screen.getByLabelText('前後')).toHaveValue('0');
+      expect(screen.getByLabelText('カラー')).toHaveValue('#4a7dff');
+      expect(screen.getByLabelText('身長(cm)')).toHaveValue('160');
     });
   });
 
@@ -314,6 +316,90 @@ describe('FormationEditorDialog', () => {
       await user.click(screen.getByRole('button', { name: '上手へ' }));
 
       expect(screen.getByLabelText('左右')).toHaveValue('0.05');
+    });
+  });
+
+  describe('メンバーカラー編集', () => {
+    function formationJsonWithOneMember() {
+      return JSON.stringify({
+        version: 1,
+        members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#4a7dff', height: 160 }],
+      });
+    }
+
+    it('メンバーが未選択のとき、カラー欄は無効化される', () => {
+      renderDialog(formationJsonWithOneMember());
+
+      expect(screen.getByLabelText('カラー')).toBeDisabled();
+    });
+
+    it('メンバーを選択すると、カラー欄にそのメンバーの現在のカラーが表示される', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithOneMember());
+
+      await user.click(screen.getByTestId('member-id-1'));
+
+      expect(screen.getByLabelText('カラー')).toHaveValue('#4a7dff');
+    });
+
+    it('カラー欄でカラーを変更すると、2Dエディター内の円の色が変わる', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithOneMember());
+
+      await user.click(screen.getByTestId('member-id-1'));
+      fireEvent.change(screen.getByLabelText('カラー'), { target: { value: '#ff0000' } });
+
+      expect(screen.getByTestId('member-id-1')).toHaveStyle({ fill: '#ff0000' });
+    });
+  });
+
+  describe('メンバー身長編集', () => {
+    function formationJsonWithOneMember() {
+      return JSON.stringify({
+        version: 1,
+        members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#4a7dff', height: 160 }],
+      });
+    }
+
+    it('メンバーが未選択のとき、身長入力欄は無効化される', () => {
+      renderDialog(formationJsonWithOneMember());
+
+      expect(screen.getByLabelText('身長(cm)')).toBeDisabled();
+    });
+
+    it('メンバーを選択すると、身長入力欄にそのメンバーの現在の身長が表示される', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithOneMember());
+
+      await user.click(screen.getByTestId('member-id-1'));
+
+      expect(screen.getByLabelText('身長(cm)')).toHaveValue('160');
+    });
+
+    it('身長入力欄に値を入力して確定すると、身長が変わる', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithOneMember());
+
+      await user.click(screen.getByTestId('member-id-1'));
+      const input = screen.getByLabelText('身長(cm)');
+      await user.clear(input);
+      await user.type(input, '175');
+      await user.tab();
+
+      expect(screen.getByLabelText('身長(cm)')).toHaveValue('175');
+    });
+
+    it('身長入力欄に200cmを超える値を入力して確定すると、200cmに丸められる', async () => {
+      const user = userEvent.setup();
+      renderDialog(formationJsonWithOneMember());
+
+      await user.click(screen.getByTestId('member-id-1'));
+      const input = screen.getByLabelText('身長(cm)');
+      await user.clear(input);
+      await user.type(input, '250');
+      await user.tab();
+
+      expect(screen.getByLabelText('身長(cm)')).toHaveValue('200');
     });
   });
 });

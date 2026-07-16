@@ -8,10 +8,19 @@ import DialogContent from '@mui/material/DialogContent';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import { FormationStageSvg } from '../parts/FormationStageSvg';
+import { MemberColorInput } from '../parts/MemberColorInput';
+import { MemberHeightInput } from '../parts/MemberHeightInput';
 import { MemberNameInput } from '../parts/MemberNameInput';
 import { MemberPositionInput } from '../parts/MemberPositionInput';
 import { MemberSelect } from '../parts/MemberSelect';
-import { addMember, moveMember, removeMember, renameMember } from '../../domain/memberOperations';
+import {
+  addMember,
+  changeMemberColor,
+  changeMemberHeight,
+  moveMember,
+  removeMember,
+  renameMember,
+} from '../../domain/memberOperations';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
 import './FormationEditorDialog.css';
 
@@ -68,6 +77,22 @@ export function FormationEditorDialog() {
       return;
     }
     setDraft((current) => renameMember(current, selectedMember.id, name));
+    setIsDraftDirty(true);
+  };
+
+  const handleChangeColor = (color: string) => {
+    if (selectedMember === null) {
+      return;
+    }
+    setDraft((current) => changeMemberColor(current, selectedMember.id, color));
+    setIsDraftDirty(true);
+  };
+
+  const handleChangeHeight = (height: number) => {
+    if (selectedMember === null) {
+      return;
+    }
+    setDraft((current) => changeMemberHeight(current, selectedMember.id, height));
     setIsDraftDirty(true);
   };
 
@@ -141,6 +166,16 @@ export function FormationEditorDialog() {
                     key={`name-${selectedMember?.id ?? 'none'}`}
                     member={selectedMember}
                     onSubmit={handleRename}
+                  />
+                </Grid>
+                <Grid size={FIELD_GRID_SIZE}>
+                  <MemberColorInput member={selectedMember} onSubmit={handleChangeColor} />
+                </Grid>
+                <Grid size={FIELD_GRID_SIZE}>
+                  <MemberHeightInput
+                    key={`height-${selectedMember?.id ?? 'none'}`}
+                    member={selectedMember}
+                    onSubmit={handleChangeHeight}
                   />
                 </Grid>
                 <MemberPositionInput
