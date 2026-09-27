@@ -1,9 +1,4 @@
-.formation-editor-dialog__controls {
-  margin-top: 0.5rem;
-}
-
 .formation-editor-dialog__svg {
   width: 100%;
   height: auto;
-  aspect-ratio: 12 / 8;
 }
