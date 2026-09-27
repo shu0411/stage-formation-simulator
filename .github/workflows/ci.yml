@@ -1,6 +1,6 @@
 name: CI
 
-# main への push と Pull Request で lint / format / ユニットテストを実行する。
+# main への push と Pull Request で lint / 型チェック / format / ユニットテストを実行する。
 
 on:
   push:
@@ -28,6 +28,8 @@ jobs:
 
       - name: Lint
         run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
       - name: Format
         run: npm run format:check
       - name: Test

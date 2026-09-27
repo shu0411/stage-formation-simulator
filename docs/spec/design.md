@@ -713,7 +713,7 @@ reducer が新しい状態を生成
   検証できるようにする
 - 3D の見た目（モデルの形状など）の詳細は自動テストせず、目視で確認する
 - CI（GitHub Actions、`.github/workflows/ci.yml`）は main への push と
-  Pull Request で lint・format チェック・ユニットテストを実行する。
+  Pull Request で lint・型チェック・format チェック・ユニットテストを実行する。
   E2E テストは CI の対象外とし、ローカルで実行する
 
 ### 2.6 実装順序
