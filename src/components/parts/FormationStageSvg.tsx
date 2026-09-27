@@ -56,6 +56,7 @@ export function FormationStageSvg({
       ref={svgRef}
       className={className}
       viewBox={`${STAGE_VIEW_BOX.minX} ${STAGE_VIEW_BOX.minY} ${STAGE_VIEW_BOX.width} ${STAGE_VIEW_BOX.height}`}
+      style={{ aspectRatio: `${STAGE_VIEW_BOX.width} / ${STAGE_VIEW_BOX.height}` }}
       role="img"
       aria-label="ステージの俯瞰図"
     >

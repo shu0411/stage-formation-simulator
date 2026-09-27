@@ -10,6 +10,12 @@ import {
 /** グリッド番号（1.6 グリッド表示）を表示する、ステージ本体の外側の余白（メートル相当）。 */
 export const AXIS_LABEL_MARGIN = 1;
 
+/**
+ * ステージ本体の奥側（上）の余白（メートル相当）。グリッド番号は置かないが、
+ * 手前側（下）のグリッド番号の下に残る空白と見た目の余白を揃えるために設ける。
+ */
+export const STAGE_TOP_MARGIN = 0.3;
+
 /** ステージ本体（枠線・グリッド）の描画範囲（メートル。手前が下、中央原点は x のみ）。 */
 export const STAGE_RECT = {
   minX: -STAGE_HALF_WIDTH,
@@ -18,12 +24,15 @@ export const STAGE_RECT = {
   height: STAGE_DEPTH,
 };
 
-/** ステージ SVG の viewBox（2.1: グリッド番号表示のため、ステージ本体の外側に余白を持つ）。 */
+/**
+ * ステージ SVG の viewBox（2.1: グリッド番号表示のため、ステージ本体の外側に余白を持つ。
+ * 上側は STAGE_TOP_MARGIN の余白を持つ）。
+ */
 export const STAGE_VIEW_BOX = {
   minX: STAGE_RECT.minX - AXIS_LABEL_MARGIN,
-  minY: STAGE_RECT.minY,
+  minY: STAGE_RECT.minY - STAGE_TOP_MARGIN,
   width: STAGE_RECT.width + AXIS_LABEL_MARGIN * 2,
-  height: STAGE_RECT.height + AXIS_LABEL_MARGIN,
+  height: STAGE_RECT.height + STAGE_TOP_MARGIN + AXIS_LABEL_MARGIN,
 };
 
 /**

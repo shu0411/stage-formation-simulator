@@ -121,15 +121,17 @@ export function FormationEditorDialog() {
       slotProps={{ paper: { 'aria-label': '2D編集ポップアップ' } }}
     >
       <DialogContent>
-        <FormationStageSvg
-          formation={draft}
-          selectedMemberId={selectedMemberId}
-          interactive
-          onSelectMember={setSelectedMemberId}
-          onMoveMember={handleMove}
-          className="formation-editor-dialog__svg"
-        />
-        <Stack spacing={1.5} className="formation-editor-dialog__controls">
+        <Stack spacing={1.5}>
+          <Card variant="outlined" sx={{ p: 1 }}>
+            <FormationStageSvg
+              formation={draft}
+              selectedMemberId={selectedMemberId}
+              interactive
+              onSelectMember={setSelectedMemberId}
+              onMoveMember={handleMove}
+              className="formation-editor-dialog__svg"
+            />
+          </Card>
           <Card variant="outlined">
             <CardContent>
               <Grid container spacing={1.5}>
