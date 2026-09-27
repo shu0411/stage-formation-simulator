@@ -21,7 +21,11 @@ function ceilToStep(value: number): number {
 }
 
 /** 軸の取りうる値の範囲を、実際の値の大小関係に正規化して求める（direction による向きの違いを吸収する）。 */
-function axisDomainBounds(scale: Parameters<typeof fromMeters>[1], meterLow: number, meterHigh: number) {
+function axisDomainBounds(
+  scale: Parameters<typeof fromMeters>[1],
+  meterLow: number,
+  meterHigh: number,
+) {
   const a = fromMeters(meterLow, scale);
   const b = fromMeters(meterHigh, scale);
   const low = Math.min(a, b);
