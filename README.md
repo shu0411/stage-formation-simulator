@@ -21,6 +21,7 @@ npm run dev
 
 ```bash
 npm run lint          # ESLint
+npm run typecheck     # TypeScript（型チェック）
 npm run format:check  # Prettier
 npm test              # Vitest（ユニットテスト）
 npm run test:e2e      # Playwright（E2E テスト）

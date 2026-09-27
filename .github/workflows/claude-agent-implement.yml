@@ -27,13 +27,13 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "24"
+          node-version: '24'
           cache: npm
       - run: npm ci
 
       - uses: shu0411/.github/actions/implement-issue@main
         with:
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          additional-allowed-tools: "Bash(npm:*),Bash(npx:*)"
+          additional-allowed-tools: 'Bash(npm:*),Bash(npx:*)'
           # このリポジトリ固有の追加指示があれば書く
           # extra-prompt: ""
