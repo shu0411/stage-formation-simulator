@@ -74,18 +74,42 @@ describe('FormationEditorDialog', () => {
     expect(screen.getByTestId('formation-member-count').textContent).toBe('1');
   });
 
-  it('キャンセルボタンを押すと編集内容は反映されずダイアログが閉じる（2.3 編集セッションと確定・破棄）', async () => {
-    const user = userEvent.setup();
-    renderDialog();
+  describe('キャンセル・ダイアログ外クリック・Escapeキーでの破棄（2.3 編集セッションと確定・破棄）', () => {
+    it('編集していない状態でキャンセルボタンを押すと、確認なしに閉じる', async () => {
+      const confirmSpy = vi.spyOn(window, 'confirm');
+      const user = userEvent.setup();
+      renderDialog();
 
-    await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
-    await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+      await user.click(screen.getByRole('button', { name: 'キャンセル' }));
 
-    expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
-    expect(screen.getByTestId('formation-member-count').textContent).toBe('0');
-  });
+      expect(confirmSpy).not.toHaveBeenCalled();
+      expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
+    });
 
-  describe('ダイアログ外クリック・Escapeキーでの破棄（2.3 編集セッションと確定・破棄）', () => {
+    it('編集した状態でキャンセルボタンを押すと確認ダイアログが表示され、承認すると反映せずに閉じる', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
+      await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+
+      expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
+      expect(screen.getByTestId('formation-member-count').textContent).toBe('0');
+    });
+
+    it('編集した状態でキャンセルボタンを押し、確認ダイアログでキャンセルすると、ダイアログは閉じず編集内容も保持される', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(screen.getByRole('button', { name: 'メンバーを追加' }));
+      await user.click(screen.getByRole('button', { name: 'キャンセル' }));
+
+      expect(screen.getByTestId('is-editor-open').textContent).toBe('true');
+      expect(screen.getByTestId(/^member-/)).toBeInTheDocument();
+    });
+
     it('編集していない状態でダイアログ外をクリックすると、確認なしに閉じる', async () => {
       const confirmSpy = vi.spyOn(window, 'confirm');
       renderDialog();
