@@ -1,7 +1,5 @@
 import { expect, test } from '@playwright/test';
-
-/** ステージ SVG の viewBox（hooks/svgCoordinates.ts の STAGE_VIEW_BOX と一致させる）。 */
-const VIEW_BOX = { minX: -6.6, minY: 0, width: 13.2, height: 7 };
+import { STAGE_VIEW_BOX as VIEW_BOX } from '../src/hooks/svgCoordinates';
 
 test.describe('2Dエディターのレイアウト', () => {
   test('サムネイルの俯瞰図の上下に空白が生じない（表示縦横比が viewBox と一致する）', async ({

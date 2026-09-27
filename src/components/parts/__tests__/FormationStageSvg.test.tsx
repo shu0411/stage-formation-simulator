@@ -99,13 +99,13 @@ describe('FormationStageSvg', () => {
 
   it('interactiveがtrueのときドラッグするとonMoveMemberが呼ばれる（1.5 立ち位置変更）', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
-      // STAGE_VIEW_BOX（x: -6.6〜6.6, y: 0〜7）に対して 100px/m のスケールで対応させる
+      // STAGE_VIEW_BOX（x: -6.6〜6.6, y: -0.3〜7）に対して 100px/m のスケールで対応させる
       left: 0,
       top: 0,
       width: 1320,
-      height: 700,
+      height: 730,
       right: 1320,
-      bottom: 700,
+      bottom: 730,
       x: 0,
       y: 0,
       toJSON: () => '',
@@ -118,7 +118,7 @@ describe('FormationStageSvg', () => {
     render(<FormationStageSvg formation={formation} interactive onMoveMember={onMoveMember} />);
     fireEvent.pointerDown(screen.getByTestId('member-id-1'));
     // svg空間で (x=0, y=6=STAGE_DEPTH) はステージ中央・手前端
-    fireEvent(window, new PointerEvent('pointermove', { clientX: 660, clientY: 600 }));
+    fireEvent(window, new PointerEvent('pointermove', { clientX: 660, clientY: 630 }));
 
     expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
   });
