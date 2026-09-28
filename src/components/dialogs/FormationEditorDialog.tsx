@@ -318,6 +318,7 @@ export function FormationEditorDialog() {
               display: 'flex',
               flexDirection: 'column',
               gap: 1.5,
+              '& > *': { flexShrink: 0 },
             }}
           >
             <ControlsCard

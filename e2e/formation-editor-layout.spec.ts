@@ -196,6 +196,28 @@ test.describe('2Dエディターのレイアウト（モバイル横表示 844×
   }) => {
     await expectDragFollowsPointerNearEdges(page);
   });
+
+  test('右カラムの内容が高さを超える場合、右カラムだけが縦スクロールしすべての項目を表示できる', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByLabel('2D編集ポップアップを開く').click();
+    await page.getByRole('button', { name: 'メンバーを追加' }).click();
+
+    const rightColumn = page
+      .locator('[aria-label="2D編集ポップアップ"] .MuiDialogContent-root > div')
+      .nth(1);
+
+    const { scrollHeight, clientHeight } = await rightColumn.evaluate((element) => ({
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+    }));
+    expect(clientHeight).toBeLessThanOrEqual(MOBILE_LANDSCAPE_VIEWPORT.height);
+    expect(scrollHeight).toBeGreaterThan(clientHeight);
+
+    await rightColumn.evaluate((element) => element.scrollTo(0, element.scrollHeight));
+    await expect(page.getByLabel('前後')).toBeInViewport();
+  });
 });
 
 test.describe('端末の向き変更', () => {
