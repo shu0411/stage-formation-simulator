@@ -15,7 +15,7 @@ describe('MemberPositionInput', () => {
   };
 
   it('メンバーの現在のX・Y座標を表示する（1.5 立ち位置変更）', () => {
-    render(<MemberPositionInput member={member} onSubmit={vi.fn()} />);
+    render(<MemberPositionInput member={member} onSubmit={vi.fn()} gridSize={12} />);
 
     expect(screen.getByLabelText('左右')).toHaveValue('1');
     expect(screen.getByLabelText('前後')).toHaveValue('2');
@@ -24,7 +24,7 @@ describe('MemberPositionInput', () => {
   it('X座標を入力・確定すると、Y座標は現在値のままonSubmitへ渡す', async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
-    render(<MemberPositionInput member={member} onSubmit={onSubmit} />);
+    render(<MemberPositionInput member={member} onSubmit={onSubmit} gridSize={12} />);
 
     const input = screen.getByLabelText('左右');
     await user.clear(input);
@@ -37,7 +37,7 @@ describe('MemberPositionInput', () => {
   it('Y座標を入力・確定すると、X座標は現在値のままonSubmitへ渡す', async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
-    render(<MemberPositionInput member={member} onSubmit={onSubmit} />);
+    render(<MemberPositionInput member={member} onSubmit={onSubmit} gridSize={12} />);
 
     const input = screen.getByLabelText('前後');
     await user.clear(input);
@@ -50,7 +50,7 @@ describe('MemberPositionInput', () => {
   it('Enterキーで確定する', async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
-    render(<MemberPositionInput member={member} onSubmit={onSubmit} />);
+    render(<MemberPositionInput member={member} onSubmit={onSubmit} gridSize={12} />);
 
     const input = screen.getByLabelText('左右');
     await user.clear(input);
@@ -62,7 +62,7 @@ describe('MemberPositionInput', () => {
   it('空文字で確定すると、onSubmitを呼ばず表示を元の座標へ戻す', async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
-    render(<MemberPositionInput member={member} onSubmit={onSubmit} />);
+    render(<MemberPositionInput member={member} onSubmit={onSubmit} gridSize={12} />);
 
     const input = screen.getByLabelText('左右');
     await user.clear(input);
@@ -73,16 +73,18 @@ describe('MemberPositionInput', () => {
   });
 
   it('確定後にmemberの座標が丸め等で変わった場合、表示がその値に更新される', () => {
-    const { rerender } = render(<MemberPositionInput member={member} onSubmit={vi.fn()} />);
+    const { rerender } = render(
+      <MemberPositionInput member={member} onSubmit={vi.fn()} gridSize={12} />,
+    );
 
     const snapped: Member = { ...member, x: 3.25 };
-    rerender(<MemberPositionInput member={snapped} onSubmit={vi.fn()} />);
+    rerender(<MemberPositionInput member={snapped} onSubmit={vi.fn()} gridSize={12} />);
 
     expect(screen.getByLabelText('左右')).toHaveValue('3.25');
   });
 
   it('メンバーが未選択のとき、X・Y座標欄は無効化される', () => {
-    render(<MemberPositionInput member={null} onSubmit={vi.fn()} />);
+    render(<MemberPositionInput member={null} onSubmit={vi.fn()} gridSize={12} />);
 
     expect(screen.getByLabelText('左右')).toBeDisabled();
     expect(screen.getByLabelText('前後')).toBeDisabled();
@@ -91,7 +93,7 @@ describe('MemberPositionInput', () => {
   it('X座標の増加ボタンをクリックすると、即座にonSubmitが呼ばれる', async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
-    render(<MemberPositionInput member={member} onSubmit={onSubmit} />);
+    render(<MemberPositionInput member={member} onSubmit={onSubmit} gridSize={12} />);
 
     await user.click(screen.getByRole('button', { name: '上手へ' }));
 
@@ -101,7 +103,7 @@ describe('MemberPositionInput', () => {
   it('Y座標の減少ボタンをクリックすると、即座にonSubmitが呼ばれる', async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
-    render(<MemberPositionInput member={member} onSubmit={onSubmit} />);
+    render(<MemberPositionInput member={member} onSubmit={onSubmit} gridSize={12} />);
 
     await user.click(screen.getByRole('button', { name: '後ろへ' }));
 

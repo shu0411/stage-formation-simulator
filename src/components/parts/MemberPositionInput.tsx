@@ -3,13 +3,14 @@ import { NumberField } from './NumberField';
 import { frontBackSpinnerLabels } from './frontBackSpinnerLabels';
 import { Y_AXIS_SCALE } from '../../domain/stageConstants';
 import type { Member } from '../../domain/types';
-
-/** 入力フィールドのグリッドセル幅（1.6 メンバーの選択欄と揃える。スマホは1列、PCは3列）。 */
-const FIELD_GRID_SIZE = { xs: 12, sm: 4 } as const;
+import type { GridSize } from '@mui/material/Grid';
+import type { ResponsiveStyleValue } from '@mui/system';
 
 type MemberPositionInputProps = {
   member: Member | null;
   onSubmit: (x: number, y: number) => void;
+  /** 入力フィールドのグリッドセル幅（呼び出し側の他の入力欄と揃える。design.md 2.1）。 */
+  gridSize: ResponsiveStyleValue<GridSize>;
 };
 
 /** スピナー・矢印キー・ホイールで増減する刻み幅（1.6 立ち位置の範囲の丸め単位と揃える）。 */
@@ -25,12 +26,12 @@ const LARGE_POSITION_STEP = 1;
  * 矢印キー・ホイール操作は Base UI の `NumberField` が `onValueCommitted` を
  * 操作のたびに呼ぶことで即座に確定する。
  */
-export function MemberPositionInput({ member, onSubmit }: MemberPositionInputProps) {
+export function MemberPositionInput({ member, onSubmit, gridSize }: MemberPositionInputProps) {
   const yLabels = frontBackSpinnerLabels(Y_AXIS_SCALE.direction);
 
   return (
     <>
-      <Grid size={FIELD_GRID_SIZE}>
+      <Grid size={gridSize}>
         <NumberField
           label="左右"
           size="small"
@@ -48,7 +49,7 @@ export function MemberPositionInput({ member, onSubmit }: MemberPositionInputPro
           }}
         />
       </Grid>
-      <Grid size={FIELD_GRID_SIZE}>
+      <Grid size={gridSize}>
         <NumberField
           label="前後"
           size="small"
