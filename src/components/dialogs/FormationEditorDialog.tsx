@@ -101,11 +101,8 @@ export function FormationEditorDialog() {
     dispatch({ type: 'CLOSE_EDITOR' });
   };
 
-  const handleCancel = () => {
-    dispatch({ type: 'CLOSE_EDITOR' });
-  };
-
-  const handleDismiss = () => {
+  /** キャンセルボタン・ダイアログ外クリック・Escape キーいずれも、下書きに変更があれば確認したうえで破棄する。 */
+  const handleDiscard = () => {
     if (isDraftDirty && !window.confirm(DISCARD_CONFIRM_MESSAGE)) {
       return;
     }
@@ -115,7 +112,7 @@ export function FormationEditorDialog() {
   return (
     <Dialog
       open
-      onClose={handleDismiss}
+      onClose={handleDiscard}
       maxWidth="md"
       fullWidth
       slotProps={{ paper: { 'aria-label': '2D編集ポップアップ' } }}
@@ -191,7 +188,7 @@ export function FormationEditorDialog() {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button variant="outlined" onClick={handleCancel}>
+        <Button variant="outlined" onClick={handleDiscard}>
           キャンセル
         </Button>
         <Button variant="contained" onClick={handleConfirm}>
