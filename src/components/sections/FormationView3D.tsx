@@ -1,6 +1,7 @@
 import { Canvas, useThree } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { PersonModel } from '../parts/PersonModel';
+import { StageDirectionLabels } from '../parts/StageDirectionLabels';
 import { StageFloor3D } from '../parts/StageFloor3D';
 import { useAppState } from '../../state/useAppState';
 import { STAGE_DEPTH, STAGE_HEIGHT } from '../../domain/stageConstants';
@@ -32,6 +33,7 @@ export function FormationView3D() {
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 10, 5]} intensity={0.8} castShadow />
       <StageFloor3D />
+      <StageDirectionLabels />
       {state.formation.members.map((member) => (
         <PersonModel key={member.id} member={member} />
       ))}
