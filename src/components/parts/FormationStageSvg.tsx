@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useMemberDrag } from '../../hooks/useMemberDrag';
 import {
   AXIS_LABEL_MARGIN,
+  DIRECTION_LABEL_MARGIN,
   STAGE_RECT,
   STAGE_VIEW_BOX,
   toSvgPoint,
@@ -30,6 +31,7 @@ type FormationStageSvgProps = {
 const MEMBER_RADIUS = 0.3;
 const MEMBER_FOCUS_RADIUS = MEMBER_RADIUS + 0.12;
 const LABEL_OFFSET = AXIS_LABEL_MARGIN / 2;
+const DIRECTION_LABEL_OFFSET = AXIS_LABEL_MARGIN + DIRECTION_LABEL_MARGIN / 2;
 
 /**
  * ステージの俯瞰図を SVG で描画する（2.1: サムネイルとポップアップで共用）。
@@ -116,6 +118,27 @@ export function FormationStageSvg({
           </g>
         );
       })}
+      <text
+        className="direction-label"
+        x={stageRight + DIRECTION_LABEL_OFFSET}
+        y={(STAGE_RECT.minY + stageBottom) / 2}
+      >
+        上手
+      </text>
+      <text
+        className="direction-label"
+        x={STAGE_RECT.minX - DIRECTION_LABEL_OFFSET}
+        y={(STAGE_RECT.minY + stageBottom) / 2}
+      >
+        下手
+      </text>
+      <text
+        className="direction-label"
+        x={(STAGE_RECT.minX + stageRight) / 2}
+        y={stageBottom + DIRECTION_LABEL_OFFSET}
+      >
+        客席側
+      </text>
       {formation.members.map((member) => {
         const point = toSvgPoint(member.x, member.y);
         const selected = member.id === selectedMemberId;
