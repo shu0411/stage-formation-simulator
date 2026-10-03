@@ -148,4 +148,18 @@ describe('FormationStageSvg', () => {
 
     expect(kyakusekiY).toBeGreaterThan(STAGE_DEPTH);
   });
+
+  it('方向ラベルはそれぞれ枠（矩形）で囲んで表示される', () => {
+    const { container } = render(<FormationStageSvg formation={{ members: [] }} />);
+
+    expect(container.querySelectorAll('.direction-label-box').length).toBe(3);
+  });
+
+  it('「上手」「下手」は縦書きで、「客席側」は横書きで表示される', () => {
+    render(<FormationStageSvg formation={{ members: [] }} />);
+
+    expect(screen.getByText('上手')).toHaveStyle({ writingMode: 'vertical-rl' });
+    expect(screen.getByText('下手')).toHaveStyle({ writingMode: 'vertical-rl' });
+    expect(screen.getByText('客席側')).not.toHaveStyle({ writingMode: 'vertical-rl' });
+  });
 });

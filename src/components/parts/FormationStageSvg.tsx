@@ -33,6 +33,78 @@ const MEMBER_FOCUS_RADIUS = MEMBER_RADIUS + 0.12;
 const LABEL_OFFSET = AXIS_LABEL_MARGIN / 2;
 const DIRECTION_LABEL_OFFSET = AXIS_LABEL_MARGIN + DIRECTION_LABEL_MARGIN / 2;
 
+/** 方向ラベルの文字サイズ（メートル相当。3D ビューの枠付きラベルに合わせ小さめにする）。 */
+const DIRECTION_LABEL_FONT_SIZE = 0.28;
+/** 方向ラベルを囲む枠の、文字に対する左右・上下の余白（メートル相当）。 */
+const DIRECTION_LABEL_PADDING_X = 0.14;
+const DIRECTION_LABEL_PADDING_Y = 0.14;
+/** 方向ラベルを囲む枠の角の丸み（メートル相当）。 */
+const DIRECTION_LABEL_BOX_RADIUS = 0.08;
+
+type DirectionLabelOrientation = 'horizontal' | 'vertical';
+
+/**
+ * 方向ラベルの枠（文字が CJK の等幅であることを前提に、文字数から算出する）。
+ */
+function directionLabelBoxSize(
+  text: string,
+  orientation: DirectionLabelOrientation,
+): { width: number; height: number } {
+  const lineLength = DIRECTION_LABEL_FONT_SIZE * text.length;
+  return orientation === 'vertical'
+    ? {
+        width: DIRECTION_LABEL_FONT_SIZE + DIRECTION_LABEL_PADDING_X * 2,
+        height: lineLength + DIRECTION_LABEL_PADDING_Y * 2,
+      }
+    : {
+        width: lineLength + DIRECTION_LABEL_PADDING_X * 2,
+        height: DIRECTION_LABEL_FONT_SIZE + DIRECTION_LABEL_PADDING_Y * 2,
+      };
+}
+
+/**
+ * 方向ラベルを枠で囲んで表示する（3D ビューの `StageDirectionLabels` と同様の見た目）。
+ * `orientation` が `vertical` のときは `writing-mode: vertical-rl` で縦書きにする
+ * （「上手」「下手」。CJK 文字は縦書きでも字形がそのまま使われるため追加調整は不要）。
+ */
+function DirectionLabel({
+  x,
+  y,
+  text,
+  orientation,
+}: {
+  x: number;
+  y: number;
+  text: string;
+  orientation: DirectionLabelOrientation;
+}) {
+  const { width, height } = directionLabelBoxSize(text, orientation);
+  return (
+    <g>
+      <rect
+        className="direction-label-box"
+        x={x - width / 2}
+        y={y - height / 2}
+        width={width}
+        height={height}
+        rx={DIRECTION_LABEL_BOX_RADIUS}
+        ry={DIRECTION_LABEL_BOX_RADIUS}
+      />
+      <text
+        className="direction-label"
+        x={x}
+        y={y}
+        style={{
+          fontSize: DIRECTION_LABEL_FONT_SIZE,
+          writingMode: orientation === 'vertical' ? 'vertical-rl' : undefined,
+        }}
+      >
+        {text}
+      </text>
+    </g>
+  );
+}
+
 /**
  * ステージの俯瞰図を SVG で描画する（2.1: サムネイルとポップアップで共用）。
  * viewBox はグリッド番号表示用の余白を含み、ステージ本体（STAGE_RECT）はその内側に描画する。
@@ -118,27 +190,24 @@ export function FormationStageSvg({
           </g>
         );
       })}
-      <text
-        className="direction-label"
+      <DirectionLabel
         x={stageRight + DIRECTION_LABEL_OFFSET}
         y={(STAGE_RECT.minY + stageBottom) / 2}
-      >
-        上手
-      </text>
-      <text
-        className="direction-label"
+        text="上手"
+        orientation="vertical"
+      />
+      <DirectionLabel
         x={STAGE_RECT.minX - DIRECTION_LABEL_OFFSET}
         y={(STAGE_RECT.minY + stageBottom) / 2}
-      >
-        下手
-      </text>
-      <text
-        className="direction-label"
+        text="下手"
+        orientation="vertical"
+      />
+      <DirectionLabel
         x={(STAGE_RECT.minX + stageRight) / 2}
         y={stageBottom + DIRECTION_LABEL_OFFSET}
-      >
-        客席側
-      </text>
+        text="客席側"
+        orientation="horizontal"
+      />
       {formation.members.map((member) => {
         const point = toSvgPoint(member.x, member.y);
         const selected = member.id === selectedMemberId;
