@@ -17,19 +17,19 @@ describe('toSvgPoint（ドメイン座標をSVG座標に変換する。手前が
 });
 
 describe('clientPointToDomain', () => {
-  // STAGE_VIEW_BOX（x: -6.6〜6.6, y: -0.3〜7）に対して 100px/m のスケールで対応させる
-  const rect = { left: 0, top: 0, width: 1320, height: 730 };
+  // STAGE_VIEW_BOX（x: -7.6〜7.6, y: -0.3〜8）に対して 100px/m のスケールで対応させる
+  const rect = { left: 0, top: 0, width: 1520, height: 830 };
 
   it('ステージ左手前の角のポインター座標は、xの最小端かつy基準値（手前端）になる', () => {
     // svg空間で (x=-5.6, y=STAGE_DEPTH=6) はステージ左手前の角
-    const point = clientPointToDomain(100, 630, rect);
+    const point = clientPointToDomain(200, 630, rect);
     expect(point.x).toBeCloseTo(-5.6 / X_AXIS_SCALE.metersPerUnit);
     expect(point.y).toBeCloseTo(Y_AXIS_SCALE.referenceValue);
   });
 
   it('ステージ右奥の角のポインター座標は、xの最大端かつyの奥端になる', () => {
     // svg空間で (x=5.6, y=0) はステージ右奥の角
-    const point = clientPointToDomain(1220, 30, rect);
+    const point = clientPointToDomain(1320, 30, rect);
     expect(point.x).toBeCloseTo(5.6 / X_AXIS_SCALE.metersPerUnit);
     expect(point.y).toBeCloseTo(
       Y_AXIS_SCALE.referenceValue +
@@ -38,7 +38,7 @@ describe('clientPointToDomain', () => {
   });
 
   it('ステージ中央のポインター座標はドメイン中央になる', () => {
-    const point = clientPointToDomain(660, 330, rect);
+    const point = clientPointToDomain(760, 330, rect);
     expect(point.x).toBeCloseTo(0);
     expect(point.y).toBeCloseTo(
       Y_AXIS_SCALE.referenceValue +

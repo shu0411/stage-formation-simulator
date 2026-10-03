@@ -16,6 +16,13 @@ export const AXIS_LABEL_MARGIN = 1;
  */
 export const STAGE_TOP_MARGIN = 0.3;
 
+/**
+ * 方向ラベル（「上手」「下手」「客席側」。1.5 2D エディター表示）を表示する、
+ * グリッド番号用の余白（AXIS_LABEL_MARGIN）のさらに外側の余白（メートル相当）。
+ * 奥側（上）には方向ラベルを置かないため、左右・手前（下）のみに適用する。
+ */
+export const DIRECTION_LABEL_MARGIN = 1;
+
 /** ステージ本体（枠線・グリッド）の描画範囲（メートル。手前が下、中央原点は x のみ）。 */
 export const STAGE_RECT = {
   minX: -STAGE_HALF_WIDTH,
@@ -25,14 +32,16 @@ export const STAGE_RECT = {
 };
 
 /**
- * ステージ SVG の viewBox（2.1: グリッド番号表示のため、ステージ本体の外側に余白を持つ。
- * 上側は STAGE_TOP_MARGIN の余白を持つ）。
+ * ステージ SVG の viewBox（2.1: グリッド番号・方向ラベル表示のため、ステージ本体の
+ * 外側に余白を持つ。左右・手前（下）はグリッド番号用の余白（AXIS_LABEL_MARGIN）の
+ * さらに外側に方向ラベル用の余白（DIRECTION_LABEL_MARGIN）を持つ。
+ * 奥側（上）は方向ラベルを置かないため STAGE_TOP_MARGIN の余白のみ持つ）。
  */
 export const STAGE_VIEW_BOX = {
-  minX: STAGE_RECT.minX - AXIS_LABEL_MARGIN,
+  minX: STAGE_RECT.minX - AXIS_LABEL_MARGIN - DIRECTION_LABEL_MARGIN,
   minY: STAGE_RECT.minY - STAGE_TOP_MARGIN,
-  width: STAGE_RECT.width + AXIS_LABEL_MARGIN * 2,
-  height: STAGE_RECT.height + STAGE_TOP_MARGIN + AXIS_LABEL_MARGIN,
+  width: STAGE_RECT.width + (AXIS_LABEL_MARGIN + DIRECTION_LABEL_MARGIN) * 2,
+  height: STAGE_RECT.height + STAGE_TOP_MARGIN + AXIS_LABEL_MARGIN + DIRECTION_LABEL_MARGIN,
 };
 
 /**

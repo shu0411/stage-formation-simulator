@@ -9,10 +9,10 @@ function createSvgRef(rect: { left: number; top: number; width: number; height: 
 }
 
 describe('useMemberDrag', () => {
-  // STAGE_VIEW_BOX（x: -6.6〜6.6, y: -0.3〜7）に対して 100px/m のスケールで対応させる
-  const rect = { left: 100, top: 50, width: 1320, height: 730 };
+  // STAGE_VIEW_BOX（x: -7.6〜7.6, y: -0.3〜8）に対して 100px/m のスケールで対応させる
+  const rect = { left: 100, top: 50, width: 1520, height: 830 };
   // svg空間で (x=0, y=6=STAGE_DEPTH) はステージ中央・手前端
-  const clientX = 100 + 660;
+  const clientX = 100 + 760;
   const clientY = 50 + 630;
 
   it('ドラッグ開始後、pointermoveのたびにドメイン座標へ変換してonMoveを呼ぶ（1.5 立ち位置変更）', () => {

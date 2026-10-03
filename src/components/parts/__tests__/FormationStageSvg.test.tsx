@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FormationStageSvg } from '../FormationStageSvg';
-import { Y_AXIS_SCALE } from '../../../domain/stageConstants';
+import { STAGE_DEPTH, STAGE_HALF_WIDTH, Y_AXIS_SCALE } from '../../../domain/stageConstants';
 import type { Formation } from '../../../domain/types';
 
 describe('FormationStageSvg', () => {
@@ -99,13 +99,13 @@ describe('FormationStageSvg', () => {
 
   it('interactiveがtrueのときドラッグするとonMoveMemberが呼ばれる（1.5 立ち位置変更）', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
-      // STAGE_VIEW_BOX（x: -6.6〜6.6, y: -0.3〜7）に対して 100px/m のスケールで対応させる
+      // STAGE_VIEW_BOX（x: -7.6〜7.6, y: -0.3〜8）に対して 100px/m のスケールで対応させる
       left: 0,
       top: 0,
-      width: 1320,
-      height: 730,
-      right: 1320,
-      bottom: 730,
+      width: 1520,
+      height: 830,
+      right: 1520,
+      bottom: 830,
       x: 0,
       y: 0,
       toJSON: () => '',
@@ -118,8 +118,48 @@ describe('FormationStageSvg', () => {
     render(<FormationStageSvg formation={formation} interactive onMoveMember={onMoveMember} />);
     fireEvent.pointerDown(screen.getByTestId('member-id-1'));
     // svg空間で (x=0, y=6=STAGE_DEPTH) はステージ中央・手前端
-    fireEvent(window, new PointerEvent('pointermove', { clientX: 660, clientY: 630 }));
+    fireEvent(window, new PointerEvent('pointermove', { clientX: 760, clientY: 630 }));
 
     expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
+  });
+
+  it('「上手」「下手」「客席側」の方向ラベルを表示する（メンバー0人でも表示される）', () => {
+    render(<FormationStageSvg formation={{ members: [] }} />);
+
+    expect(screen.getByText('上手')).toBeInTheDocument();
+    expect(screen.getByText('下手')).toBeInTheDocument();
+    expect(screen.getByText('客席側')).toBeInTheDocument();
+  });
+
+  it('「上手」はステージの+X側（右側）、「下手」は-X側（左側）に表示される', () => {
+    render(<FormationStageSvg formation={{ members: [] }} />);
+
+    const joteX = Number(screen.getByText('上手').getAttribute('x'));
+    const shimoteX = Number(screen.getByText('下手').getAttribute('x'));
+
+    expect(joteX).toBeGreaterThan(STAGE_HALF_WIDTH);
+    expect(shimoteX).toBeLessThan(-STAGE_HALF_WIDTH);
+  });
+
+  it('「客席側」はY軸増加方向（ステージ手前端の外側、俯瞰図の下側）に表示される', () => {
+    render(<FormationStageSvg formation={{ members: [] }} />);
+
+    const kyakusekiY = Number(screen.getByText('客席側').getAttribute('y'));
+
+    expect(kyakusekiY).toBeGreaterThan(STAGE_DEPTH);
+  });
+
+  it('方向ラベルはそれぞれ枠（矩形）で囲んで表示される', () => {
+    const { container } = render(<FormationStageSvg formation={{ members: [] }} />);
+
+    expect(container.querySelectorAll('.direction-label-box').length).toBe(3);
+  });
+
+  it('「上手」「下手」は縦書きで、「客席側」は横書きで表示される', () => {
+    render(<FormationStageSvg formation={{ members: [] }} />);
+
+    expect(screen.getByText('上手')).toHaveStyle({ writingMode: 'vertical-rl' });
+    expect(screen.getByText('下手')).toHaveStyle({ writingMode: 'vertical-rl' });
+    expect(screen.getByText('客席側')).not.toHaveStyle({ writingMode: 'vertical-rl' });
   });
 });
