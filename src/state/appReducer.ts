@@ -14,5 +14,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 
     case 'MARK_SAVED':
       return { ...state, isDirty: false };
+
+    case 'SELECT_CAMERA_PRESET':
+      return { ...state, cameraPresetId: action.presetId };
   }
 }

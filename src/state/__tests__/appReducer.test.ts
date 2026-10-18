@@ -16,6 +16,15 @@ describe('appReducer', () => {
     expect(next.isDirty).toBe(true);
   });
 
+  it('REPLACE_FORMATION: 選択中のカメラ位置は維持される（仕様: カメラ位置の切り替え）', () => {
+    const state: AppState = { ...createInitialAppState({ members: [] }), cameraPresetId: 'left' };
+    const imported = { members: [] };
+
+    const next = appReducer(state, { type: 'REPLACE_FORMATION', formation: imported });
+
+    expect(next.cameraPresetId).toBe('left');
+  });
+
   it('OPEN_EDITOR / CLOSE_EDITOR: ポップアップの開閉状態を切り替える（1.5 2Dエディター表示）', () => {
     const state = createInitialAppState({ members: [] });
 
@@ -31,6 +40,21 @@ describe('appReducer', () => {
 
     const next = appReducer(state, { type: 'MARK_SAVED' });
 
+    expect(next.isDirty).toBe(false);
+  });
+
+  it('初期状態のカメラ位置は「中央」である（仕様: カメラ位置の切り替え）', () => {
+    const state = createInitialAppState({ members: [] });
+
+    expect(state.cameraPresetId).toBe('center');
+  });
+
+  it('SELECT_CAMERA_PRESET: cameraPresetIdを変更し、isDirtyは変更しない（仕様: カメラ位置の切り替え）', () => {
+    const state = createInitialAppState({ members: [] });
+
+    const next = appReducer(state, { type: 'SELECT_CAMERA_PRESET', presetId: 'right' });
+
+    expect(next.cameraPresetId).toBe('right');
     expect(next.isDirty).toBe(false);
   });
 });
