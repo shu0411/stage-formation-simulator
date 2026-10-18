@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import type { MouseEvent } from 'react';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import VideocamIcon from '@mui/icons-material/Videocam';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -10,7 +12,6 @@ import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { CAMERA_PRESETS } from '../../domain/cameraPresets';
 import type { CameraPresetId } from '../../domain/cameraPresets';
-import { CameraPresetIcon } from './CameraPresetIcon';
 
 type CameraPresetSelectorProps = {
   value: CameraPresetId;
@@ -65,21 +66,23 @@ export function CameraPresetSelector({ value, onChange }: CameraPresetSelectorPr
   }
 
   return (
-    <ToggleButtonGroup
-      exclusive
-      value={value}
-      onChange={(_event, presetId: CameraPresetId | null) => {
-        if (presetId !== null) {
-          onChange(presetId);
-        }
-      }}
-    >
-      {CAMERA_PRESETS.map((preset) => (
-        <ToggleButton key={preset.id} value={preset.id} sx={{ gap: 0.5 }}>
-          <CameraPresetIcon presetId={preset.id} />
-          <span>{preset.label}</span>
-        </ToggleButton>
-      ))}
-    </ToggleButtonGroup>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <VideocamIcon aria-hidden="true" fontSize="small" />
+      <ToggleButtonGroup
+        exclusive
+        value={value}
+        onChange={(_event, presetId: CameraPresetId | null) => {
+          if (presetId !== null) {
+            onChange(presetId);
+          }
+        }}
+      >
+        {CAMERA_PRESETS.map((preset) => (
+          <ToggleButton key={preset.id} value={preset.id}>
+            {preset.label}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+    </Box>
   );
 }

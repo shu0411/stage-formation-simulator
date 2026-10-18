@@ -9,8 +9,9 @@
 }
 
 /* 幅900px未満（MUIの`md`ブレークポイント未満）: 保存・JSONエクスポート・
-   JSONインポート・カメラ位置切り替えの4項目を、アイコン付きで均等な幅に
-   並べるメニューバー風の見た目にする（仕様: モバイル表示の操作バー全体）。 */
+   JSONインポート・カメラ位置切り替えの4項目を、枠・背景のないアイコン+
+   短いラベルが均等な幅に並ぶメニューバー風の見た目にする
+   （仕様: モバイル表示の操作バー全体）。 */
 @media (max-width: 899.95px) {
   .operations-bar {
     flex-wrap: nowrap;
@@ -21,14 +22,22 @@
   .operations-bar > .MuiButton-root {
     flex: 1 1 0;
     min-width: 0;
-    padding-left: 0.25rem;
-    padding-right: 0.25rem;
+    flex-direction: column;
+    padding: 0.25rem 0.125rem;
     font-size: 0.6875rem;
     line-height: 1.2;
     white-space: normal;
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+    color: inherit;
+  }
+
+  .operations-bar > .MuiButton-root:hover {
+    background-color: transparent;
   }
 
   .operations-bar > .MuiButton-root .MuiButton-startIcon {
-    margin-right: 0.25rem;
+    margin: 0 0 0.125rem;
   }
 }

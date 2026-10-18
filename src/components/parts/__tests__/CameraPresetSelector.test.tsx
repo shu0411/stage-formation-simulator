@@ -45,12 +45,17 @@ describe('CameraPresetSelector', () => {
     expect(screen.getByRole('button', { name: '左' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('幅900px以上では、各トグルボタンにアイコンとテキストラベルの両方が表示される（仕様: PC表示）', () => {
-    renderSelector('center');
+  it('幅900px以上では、トグルボタン群の左にビデオカメラアイコンが1つだけ表示される（仕様: PC表示）', () => {
+    const { container } = render(
+      <ThemeProvider theme={theme}>
+        <CameraPresetSelector value="center" onChange={vi.fn()} />
+      </ThemeProvider>,
+    );
 
+    expect(container.querySelectorAll('svg')).toHaveLength(1);
     for (const label of ['左', '中央', '右', '前方', '後方']) {
       const button = screen.getByRole('button', { name: label });
-      expect(button.querySelector('svg')).not.toBeNull();
+      expect(button.querySelector('svg')).toBeNull();
       expect(button).toHaveTextContent(label);
     }
   });
