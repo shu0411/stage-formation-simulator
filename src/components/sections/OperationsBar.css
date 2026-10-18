@@ -1,12 +1,9 @@
 .operations-bar {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.operations-bar__controls {
-  display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
   align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid #ccc;
+  background: Canvas;
 }

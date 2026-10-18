@@ -28,6 +28,11 @@ function MemberCountProbe() {
   return <p data-testid="member-count">{state.formation.members.length}</p>;
 }
 
+function CameraPresetProbe() {
+  const state = useAppState();
+  return <p data-testid="camera-preset">{state.cameraPresetId}</p>;
+}
+
 describe('OperationsBar', () => {
   it('保存ボタンを押すとstorageへ保存しisDirtyをfalseにする（1.5 保存・復元）', async () => {
     const storage = noopStorage();
@@ -102,5 +107,23 @@ describe('OperationsBar', () => {
       '不正なファイルです。フォーメーションのJSONファイルを選択してください。',
     );
     expect(memberCountText()).toBe('0');
+  });
+
+  it('カメラ位置を切り替えるとcameraPresetIdが変わりisDirtyはfalseのままになる（仕様: カメラ位置の切り替え）', async () => {
+    const user = userEvent.setup();
+    render(
+      <AppStateProvider storage={noopStorage()}>
+        <OperationsBar storage={noopStorage()} fileIO={fakeFileIO()} />
+        <IsDirtyProbe />
+        <CameraPresetProbe />
+      </AppStateProvider>,
+    );
+
+    expect(screen.getByTestId('camera-preset').textContent).toBe('center');
+
+    await user.click(screen.getByRole('button', { name: '右' }));
+
+    expect(screen.getByTestId('camera-preset').textContent).toBe('right');
+    expect(screen.getByTestId('is-dirty').textContent).toBe('false');
   });
 });

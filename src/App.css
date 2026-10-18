@@ -1,11 +1,18 @@
 .app-layout {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100dvh;
   overflow: hidden;
 }
 
-.app-layout canvas {
+.app-layout__viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.app-layout__viewport canvas {
   display: block;
   width: 100%;
   height: 100%;
