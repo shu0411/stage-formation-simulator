@@ -6,6 +6,8 @@ import { saveFormation } from '../../application/saveFormation';
 import type { FormationFileIO, FormationStorage } from '../../application/ports';
 import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
+import { CameraPresetSelector } from '../parts/CameraPresetSelector';
+import type { CameraPresetId } from '../../domain/cameraPresets';
 import './OperationsBar.css';
 
 type OperationsBarProps = {
@@ -51,20 +53,23 @@ export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
     dispatch({ type: 'REPLACE_FORMATION', formation });
   };
 
+  const handleSelectCameraPreset = (presetId: CameraPresetId) => {
+    dispatch({ type: 'SELECT_CAMERA_PRESET', presetId });
+  };
+
   return (
     <div className="operations-bar">
-      <div className="operations-bar__controls">
-        <Button variant="contained" onClick={handleSave}>
-          保存
-        </Button>
-        <Button variant="outlined" onClick={handleExport}>
-          JSONエクスポート
-        </Button>
-        <Button component="label" variant="outlined">
-          JSONインポート
-          <input type="file" hidden accept="application/json,.json" onChange={handleImportChange} />
-        </Button>
-      </div>
+      <Button variant="contained" onClick={handleSave}>
+        保存
+      </Button>
+      <Button variant="outlined" onClick={handleExport}>
+        JSONエクスポート
+      </Button>
+      <Button component="label" variant="outlined">
+        JSONインポート
+        <input type="file" hidden accept="application/json,.json" onChange={handleImportChange} />
+      </Button>
+      <CameraPresetSelector value={state.cameraPresetId} onChange={handleSelectCameraPreset} />
     </div>
   );
 }

@@ -17,11 +17,13 @@ function App({ storage, fileIO }: AppProps) {
 
   return (
     <div className="app-layout">
-      <FormationView3D />
-      <div className="app-layout__overlay">
-        <FormationThumbnail />
-        <OperationsBar storage={storage} fileIO={fileIO} />
+      <div className="app-layout__viewport">
+        <FormationView3D />
+        <div className="app-layout__overlay">
+          <FormationThumbnail />
+        </div>
       </div>
+      <OperationsBar storage={storage} fileIO={fileIO} />
       {state.isEditorOpen && <FormationEditorDialog />}
     </div>
   );
