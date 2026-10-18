@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OperationsBar } from '../OperationsBar';
 import { AppStateProvider } from '../../../state/AppStateContext';
 import { useAppState } from '../../../state/useAppState';
@@ -12,6 +12,22 @@ function noopStorage(json: string | null = null): FormationStorage {
 
 function fakeFileIO(overrides: Partial<FormationFileIO> = {}): FormationFileIO {
   return { read: vi.fn(), download: vi.fn(), ...overrides };
+}
+
+function mockMatchMedia(isMobile: boolean) {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('max-width') ? isMobile : false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  );
 }
 
 function IsDirtyProbe() {
@@ -34,6 +50,25 @@ function CameraPresetProbe() {
 }
 
 describe('OperationsBar', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('幅900px未満では、保存・JSONエクスポート・JSONインポート・カメラの各ボタンにアイコンが表示される（仕様: モバイル表示の操作バー全体）', () => {
+    mockMatchMedia(true);
+    render(
+      <AppStateProvider storage={noopStorage()}>
+        <OperationsBar storage={noopStorage()} fileIO={fakeFileIO()} />
+      </AppStateProvider>,
+    );
+
+    for (const label of ['保存', 'JSONエクスポート', 'JSONインポート', 'カメラ']) {
+      const button = screen.getByRole('button', { name: label });
+      expect(button.querySelector('svg')).not.toBeNull();
+    }
+  });
+
   it('保存ボタンを押すとstorageへ保存しisDirtyをfalseにする（1.5 保存・復元）', async () => {
     const storage = noopStorage();
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});

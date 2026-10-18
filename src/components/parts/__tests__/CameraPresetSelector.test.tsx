@@ -16,21 +16,25 @@ function renderSelector(value: 'left' | 'center' | 'right' | 'front' | 'back', o
 }
 
 function mockMatchMedia(isMobile: boolean) {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: query.includes('max-width') ? isMobile : false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  }));
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('max-width') ? isMobile : false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  );
 }
 
 describe('CameraPresetSelector', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('幅900px以上では、トグルボタン群が表示され選択中のプリセットが押下状態になる（`matchMedia` 未定義のjsdomでは常にこちら）', () => {
@@ -39,6 +43,16 @@ describe('CameraPresetSelector', () => {
     const centerButton = screen.getByRole('button', { name: '中央' });
     expect(centerButton).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: '左' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('幅900px以上では、各トグルボタンにアイコンとテキストラベルの両方が表示される（仕様: PC表示）', () => {
+    renderSelector('center');
+
+    for (const label of ['左', '中央', '右', '前方', '後方']) {
+      const button = screen.getByRole('button', { name: label });
+      expect(button.querySelector('svg')).not.toBeNull();
+      expect(button).toHaveTextContent(label);
+    }
   });
 
   it('トグル表示で別のプリセットを押すとonChangeが呼ばれる', async () => {
@@ -59,12 +73,14 @@ describe('CameraPresetSelector', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('幅900px未満では「カメラ」ボタンに集約され、メニューから選ぶとonChangeが呼ばれメニューが閉じる', async () => {
+  it('幅900px未満では「カメラ」ボタンに集約され、アイコンが表示され、メニューから選ぶとonChangeが呼ばれメニューが閉じる', async () => {
     mockMatchMedia(true);
     const user = userEvent.setup();
     const onChange = renderSelector('center');
 
-    await user.click(screen.getByRole('button', { name: 'カメラ' }));
+    const cameraButton = screen.getByRole('button', { name: 'カメラ' });
+    expect(cameraButton.querySelector('svg')).not.toBeNull();
+    await user.click(cameraButton);
     expect(screen.getByRole('menu')).toBeInTheDocument();
 
     await user.click(screen.getByRole('menuitem', { name: '前方' }));

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { MouseEvent } from 'react';
 import Button from '@mui/material/Button';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -9,6 +10,7 @@ import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { CAMERA_PRESETS } from '../../domain/cameraPresets';
 import type { CameraPresetId } from '../../domain/cameraPresets';
+import { CameraPresetIcon } from './CameraPresetIcon';
 
 type CameraPresetSelectorProps = {
   value: CameraPresetId;
@@ -39,7 +41,11 @@ export function CameraPresetSelector({ value, onChange }: CameraPresetSelectorPr
 
     return (
       <>
-        <Button variant="outlined" onClick={handleOpen}>
+        <Button
+          variant="outlined"
+          onClick={handleOpen}
+          startIcon={<CameraAltIcon aria-hidden="true" />}
+        >
           カメラ
         </Button>
         <Menu anchorEl={anchorEl} open={anchorEl !== null} onClose={handleClose}>
@@ -69,8 +75,9 @@ export function CameraPresetSelector({ value, onChange }: CameraPresetSelectorPr
       }}
     >
       {CAMERA_PRESETS.map((preset) => (
-        <ToggleButton key={preset.id} value={preset.id}>
-          {preset.label}
+        <ToggleButton key={preset.id} value={preset.id} sx={{ gap: 0.5 }}>
+          <CameraPresetIcon presetId={preset.id} />
+          <span>{preset.label}</span>
         </ToggleButton>
       ))}
     </ToggleButtonGroup>

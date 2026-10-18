@@ -1,5 +1,8 @@
 import type { ChangeEvent } from 'react';
 import Button from '@mui/material/Button';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+import SaveIcon from '@mui/icons-material/Save';
 import { exportFormation } from '../../application/exportFormation';
 import { importFormation } from '../../application/importFormation';
 import { saveFormation } from '../../application/saveFormation';
@@ -59,13 +62,21 @@ export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
 
   return (
     <div className="operations-bar">
-      <Button variant="contained" onClick={handleSave}>
+      <Button variant="contained" onClick={handleSave} startIcon={<SaveIcon aria-hidden="true" />}>
         保存
       </Button>
-      <Button variant="outlined" onClick={handleExport}>
+      <Button
+        variant="outlined"
+        onClick={handleExport}
+        startIcon={<FileDownloadIcon aria-hidden="true" />}
+      >
         JSONエクスポート
       </Button>
-      <Button component="label" variant="outlined">
+      <Button
+        component="label"
+        variant="outlined"
+        startIcon={<FileUploadIcon aria-hidden="true" />}
+      >
         JSONインポート
         <input type="file" hidden accept="application/json,.json" onChange={handleImportChange} />
       </Button>
