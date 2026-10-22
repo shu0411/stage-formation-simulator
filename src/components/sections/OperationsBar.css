@@ -33,6 +33,12 @@
     color: inherit;
   }
 
+  /* 項目間に細い区切り線を入れ、隣のボタンとの誤タップを防ぐ
+     （枠なし・背景なしの見た目は維持する）。 */
+  .operations-bar > .MuiButton-root + .MuiButton-root {
+    border-left: 1px solid #ccc;
+  }
+
   .operations-bar > .MuiButton-root:hover {
     background-color: transparent;
   }

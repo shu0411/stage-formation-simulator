@@ -70,14 +70,14 @@ export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
         onClick={handleExport}
         startIcon={<FileDownloadIcon aria-hidden="true" />}
       >
-        JSONエクスポート
+        エクスポート
       </Button>
       <Button
         component="label"
         variant="outlined"
         startIcon={<FileUploadIcon aria-hidden="true" />}
       >
-        JSONインポート
+        インポート
         <input type="file" hidden accept="application/json,.json" onChange={handleImportChange} />
       </Button>
       <CameraPresetSelector value={state.cameraPresetId} onChange={handleSelectCameraPreset} />

@@ -55,7 +55,7 @@ describe('OperationsBar', () => {
     vi.unstubAllGlobals();
   });
 
-  it('幅900px未満では、保存・JSONエクスポート・JSONインポート・カメラの各ボタンにアイコンが表示される（仕様: モバイル表示の操作バー全体）', () => {
+  it('幅900px未満では、保存・エクスポート・インポート・カメラの各ボタンにアイコンが表示される（仕様: モバイル表示の操作バー全体）', () => {
     mockMatchMedia(true);
     render(
       <AppStateProvider storage={noopStorage()}>
@@ -63,7 +63,7 @@ describe('OperationsBar', () => {
       </AppStateProvider>,
     );
 
-    for (const label of ['保存', 'JSONエクスポート', 'JSONインポート', 'カメラ']) {
+    for (const label of ['保存', 'エクスポート', 'インポート', 'カメラ']) {
       const button = screen.getByRole('button', { name: label });
       expect(button.querySelector('svg')).not.toBeNull();
     }
@@ -87,7 +87,7 @@ describe('OperationsBar', () => {
     expect(alertSpy).toHaveBeenCalledWith('保存しました。');
   });
 
-  it('JSONエクスポートボタンを押すとダウンロードさせる（1.5 JSONエクスポート）', async () => {
+  it('エクスポートボタンを押すとダウンロードさせる（1.5 JSONエクスポート）', async () => {
     const fileIO = fakeFileIO();
     const user = userEvent.setup();
     render(
@@ -96,7 +96,7 @@ describe('OperationsBar', () => {
       </AppStateProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'JSONエクスポート' }));
+    await user.click(screen.getByRole('button', { name: 'エクスポート' }));
 
     expect(fileIO.download).toHaveBeenCalledWith(
       JSON.stringify({ version: 1, members: [] }),
@@ -119,7 +119,7 @@ describe('OperationsBar', () => {
     );
 
     const file = new File([json], 'formation.json', { type: 'application/json' });
-    await user.upload(screen.getByLabelText('JSONインポート'), file);
+    await user.upload(screen.getByLabelText('インポート'), file);
 
     expect(memberCountText()).toBe('1');
   });
@@ -136,7 +136,7 @@ describe('OperationsBar', () => {
     );
 
     const file = new File(['not json'], 'invalid.json', { type: 'application/json' });
-    await user.upload(screen.getByLabelText('JSONインポート'), file);
+    await user.upload(screen.getByLabelText('インポート'), file);
 
     expect(alertSpy).toHaveBeenCalledWith(
       '不正なファイルです。フォーメーションのJSONファイルを選択してください。',
