@@ -19,6 +19,7 @@
     "@base-ui/react": "^1.6.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.5.0",
     "@mui/material": "^9.2.0",
     "@react-three/drei": "^10.0.0",
     "@react-three/fiber": "^9.0.0",
