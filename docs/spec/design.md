@@ -824,6 +824,14 @@ reducer が新しい状態を生成
 - CI（GitHub Actions、`.github/workflows/ci.yml`）は main への push と
   Pull Request で lint・型チェック・format チェック・ユニットテスト・E2E テストを
   実行する。E2E は別ジョブとし、失敗時は Playwright の HTML レポートを Artifact に保存する
+- Dependabot PR の自動レビュー（`.github/workflows/claude-dependency-review.yml`）は
+  `pull_request_target` の opened・synchronize・reopened で CI と並列に実行する。
+  作成者が `dependabot[bot]`、ブランチ名が `dependabot/` で始まり、同一リポジトリの
+  PR である場合に限定する。共通 Action
+  `shu0411/.github/actions/review-dependency-update@main` を使用し、既定ブランチを
+  checkout して PR のコードは実行しない。読み取り権限のレビュー用ジョブと
+  PR 書き込み権限の投稿用ジョブを分離し、Claude の認証情報はレビュー用ジョブだけに渡す。
+  同一 PR の再実行時は進行中のレビューをキャンセルする。
 
 ### 2.6 実装順序
 

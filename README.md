@@ -32,3 +32,11 @@ npm run test:e2e      # Playwright（E2E テスト）
 ```bash
 npm run build
 ```
+
+## Dependabot PR の自動レビュー
+
+[Claude Dependency Review](.github/workflows/claude-dependency-review.yml) が
+Dependabot PR をレビューし、結果を PR に投稿する。実行条件と権限分離は
+[設計書の CI 方針](docs/spec/design.md#25-テスト方針)を参照。
+
+実行にはリポジトリから参照可能な Actions Secret `CLAUDE_CODE_OAUTH_TOKEN` が必要。
