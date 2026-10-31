@@ -34,9 +34,21 @@
   }
 
   /* 項目間に細い区切り線を入れ、隣のボタンとの誤タップを防ぐ
-     （枠なし・背景なしの見た目は維持する）。 */
+     （枠なし・背景なしの見た目は維持する）。ボタン自体のborder-leftだと
+     ボタンの角丸(border-radius)に沿って線の上下が歪むため、角丸の影響を
+     受けない疑似要素で縦線のみを描画する。 */
   .operations-bar > .MuiButton-root + .MuiButton-root {
-    border-left: 1px solid #ccc;
+    position: relative;
+  }
+
+  .operations-bar > .MuiButton-root + .MuiButton-root::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    bottom: 15%;
+    width: 1px;
+    background-color: #ccc;
   }
 
   .operations-bar > .MuiButton-root:hover {
