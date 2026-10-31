@@ -13,7 +13,7 @@ test.describe('JSON エクスポート・インポート', () => {
     await page.getByRole('button', { name: '確定' }).click();
 
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'JSONエクスポート' }).click();
+    await page.getByRole('button', { name: 'エクスポート' }).click();
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toBe('formation.json');
@@ -34,7 +34,7 @@ test.describe('JSON エクスポート・インポート', () => {
     await page.getByRole('button', { name: '確定' }).click();
 
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'JSONエクスポート' }).click();
+    await page.getByRole('button', { name: 'エクスポート' }).click();
     const download = await downloadPromise;
     const exportedPath = await download.path();
     const exportedContent = readFileSync(exportedPath!, 'utf-8');
@@ -42,7 +42,7 @@ test.describe('JSON エクスポート・インポート', () => {
     await page.reload();
     await expect(page.locator('.person-model__label')).toHaveCount(0);
 
-    await page.getByLabel('JSONインポート').setInputFiles({
+    await page.getByLabel('インポート').setInputFiles({
       name: 'formation.json',
       mimeType: 'application/json',
       buffer: Buffer.from(exportedContent),
@@ -63,7 +63,7 @@ test.describe('JSON エクスポート・インポート', () => {
     writeFileSync(invalidFilePath, 'これはJSONではありません');
 
     const dialogPromise = page.waitForEvent('dialog');
-    await page.getByLabel('JSONインポート').setInputFiles(invalidFilePath);
+    await page.getByLabel('インポート').setInputFiles(invalidFilePath);
     const dialog = await dialogPromise;
 
     expect(dialog.type()).toBe('alert');
