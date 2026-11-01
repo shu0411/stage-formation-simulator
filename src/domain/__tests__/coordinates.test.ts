@@ -50,4 +50,30 @@ describe('snapPositionWithinStage', () => {
     const front = snapPositionWithinStage(0, Y_FRONT + 1);
     expect(front.y).toBeCloseTo(Y_FRONT);
   });
+
+  it('stepを省略した場合は0.05単位のままになる（仕様: 移動単位トグル、既存の呼び出しへの影響なし）', () => {
+    expect(snapPositionWithinStage(1.234, -2.777)).toEqual({ x: 1.25, y: -2.8 });
+  });
+
+  it('step=0.25を指定すると、座標が0.25の倍数に揃う', () => {
+    expect(snapPositionWithinStage(1.35, -0.1, 0.25)).toEqual({ x: 1.25, y: 0 });
+  });
+
+  it('step=1を指定すると、座標が1の倍数に揃う', () => {
+    expect(snapPositionWithinStage(1.35, -0.4, 1)).toEqual({ x: 1, y: 0 });
+  });
+
+  it('step=1で範囲外になる場合、左右は±6、前後は-4〜2の範囲内に収まる（仕様: ステージ端）', () => {
+    const right = snapPositionWithinStage(100, 0, 1);
+    expect(right.x).toBe(6);
+
+    const left = snapPositionWithinStage(-100, 0, 1);
+    expect(left.x).toBe(-6);
+
+    const front = snapPositionWithinStage(0, 100, 1);
+    expect(front.y).toBe(2);
+
+    const back = snapPositionWithinStage(0, -100, 1);
+    expect(back.y).toBe(-4);
+  });
 });
