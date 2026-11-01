@@ -8,6 +8,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
+import { DragStepSelector } from '../parts/DragStepSelector';
 import { FormationStageSvg } from '../parts/FormationStageSvg';
 import { MemberColorInput } from '../parts/MemberColorInput';
 import { MemberHeightInput } from '../parts/MemberHeightInput';
@@ -24,6 +25,7 @@ import {
   renameMember,
 } from '../../domain/memberOperations';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
+import type { DragStep } from '../../domain/dragStep';
 import type { Formation, Member } from '../../domain/types';
 import type { GridSize } from '@mui/material/Grid';
 import type { ResponsiveStyleValue } from '@mui/system';
@@ -42,6 +44,7 @@ const DISCARD_CONFIRM_MESSAGE = '編集内容を破棄して閉じますか？';
 type OverviewCardProps = {
   draft: Formation;
   selectedMemberId: string | null;
+  dragStep: DragStep;
   onSelectMember: (id: string) => void;
   onMoveMember: (id: string, x: number, y: number) => void;
   /** true の場合、俯瞰図をカラムの高さいっぱいに収まる最大サイズで中央表示する（モバイル横表示）。 */
@@ -52,6 +55,7 @@ type OverviewCardProps = {
 function OverviewCard({
   draft,
   selectedMemberId,
+  dragStep,
   onSelectMember,
   onMoveMember,
   fitToColumn = false,
@@ -75,6 +79,7 @@ function OverviewCard({
         formation={draft}
         selectedMemberId={selectedMemberId}
         interactive
+        dragStep={dragStep}
         onSelectMember={onSelectMember}
         onMoveMember={onMoveMember}
         className={
@@ -91,28 +96,35 @@ type ControlsCardProps = {
   draft: Formation;
   selectedMember: Member | null;
   selectedMemberId: string | null;
+  dragStep: DragStep;
   fieldGridSize: ResponsiveStyleValue<GridSize>;
   cardContentSx?: SxProps<Theme>;
   onAdd: () => void;
   onDelete: () => void;
   onSelectMember: (id: string) => void;
+  onSelectDragStep: (dragStep: DragStep) => void;
 };
 
-/** 操作欄 Card（メンバーの追加・削除・選択。design.md 1.4 2D 編集ポップアップ）。 */
+/** 操作欄 Card（移動単位トグル・メンバーの追加・削除・選択。design.md 1.4 2D 編集ポップアップ）。 */
 function ControlsCard({
   draft,
   selectedMember,
   selectedMemberId,
+  dragStep,
   fieldGridSize,
   cardContentSx,
   onAdd,
   onDelete,
   onSelectMember,
+  onSelectDragStep,
 }: ControlsCardProps) {
   return (
     <Card variant="outlined">
       <CardContent sx={cardContentSx}>
         <Grid container spacing={1.5}>
+          <Grid size={fieldGridSize}>
+            <DragStepSelector value={dragStep} onChange={onSelectDragStep} />
+          </Grid>
           <Grid size={fieldGridSize}>
             <Stack direction="row" spacing={1}>
               <Button variant="contained" onClick={onAdd}>
@@ -269,6 +281,10 @@ export function FormationEditorDialog() {
     setIsDraftDirty(true);
   };
 
+  const handleSelectDragStep = (dragStep: DragStep) => {
+    dispatch({ type: 'SELECT_DRAG_STEP', dragStep });
+  };
+
   const handleConfirm = () => {
     dispatch({ type: 'REPLACE_FORMATION', formation: draft });
     dispatch({ type: 'CLOSE_EDITOR' });
@@ -305,6 +321,7 @@ export function FormationEditorDialog() {
             <OverviewCard
               draft={draft}
               selectedMemberId={selectedMemberId}
+              dragStep={state.dragStep}
               onSelectMember={setSelectedMemberId}
               onMoveMember={handleMove}
               fitToColumn
@@ -325,11 +342,13 @@ export function FormationEditorDialog() {
               draft={draft}
               selectedMember={selectedMember}
               selectedMemberId={selectedMemberId}
+              dragStep={state.dragStep}
               fieldGridSize={fieldGridSize}
               cardContentSx={cardContentSx}
               onAdd={handleAdd}
               onDelete={handleDelete}
               onSelectMember={setSelectedMemberId}
+              onSelectDragStep={handleSelectDragStep}
             />
             <InputsCard
               selectedMember={selectedMember}
@@ -348,6 +367,7 @@ export function FormationEditorDialog() {
             <OverviewCard
               draft={draft}
               selectedMemberId={selectedMemberId}
+              dragStep={state.dragStep}
               onSelectMember={setSelectedMemberId}
               onMoveMember={handleMove}
             />
@@ -355,11 +375,13 @@ export function FormationEditorDialog() {
               draft={draft}
               selectedMember={selectedMember}
               selectedMemberId={selectedMemberId}
+              dragStep={state.dragStep}
               fieldGridSize={fieldGridSize}
               cardContentSx={cardContentSx}
               onAdd={handleAdd}
               onDelete={handleDelete}
               onSelectMember={setSelectedMemberId}
+              onSelectDragStep={handleSelectDragStep}
             />
             <InputsCard
               selectedMember={selectedMember}
