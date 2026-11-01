@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OperationsBar } from '../OperationsBar';
 import { AppStateProvider } from '../../../state/AppStateContext';
 import { useAppState } from '../../../state/useAppState';
@@ -12,6 +12,22 @@ function noopStorage(json: string | null = null): FormationStorage {
 
 function fakeFileIO(overrides: Partial<FormationFileIO> = {}): FormationFileIO {
   return { read: vi.fn(), download: vi.fn(), ...overrides };
+}
+
+function mockMatchMedia(isMobile: boolean) {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('max-width') ? isMobile : false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  );
 }
 
 function IsDirtyProbe() {
@@ -34,6 +50,25 @@ function CameraPresetProbe() {
 }
 
 describe('OperationsBar', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('幅900px未満では、保存・エクスポート・インポート・カメラの各ボタンにアイコンが表示される（仕様: モバイル表示の操作バー全体）', () => {
+    mockMatchMedia(true);
+    render(
+      <AppStateProvider storage={noopStorage()}>
+        <OperationsBar storage={noopStorage()} fileIO={fakeFileIO()} />
+      </AppStateProvider>,
+    );
+
+    for (const label of ['保存', 'エクスポート', 'インポート', 'カメラ']) {
+      const button = screen.getByRole('button', { name: label });
+      expect(button.querySelector('svg')).not.toBeNull();
+    }
+  });
+
   it('保存ボタンを押すとstorageへ保存しisDirtyをfalseにする（1.5 保存・復元）', async () => {
     const storage = noopStorage();
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -52,7 +87,7 @@ describe('OperationsBar', () => {
     expect(alertSpy).toHaveBeenCalledWith('保存しました。');
   });
 
-  it('JSONエクスポートボタンを押すとダウンロードさせる（1.5 JSONエクスポート）', async () => {
+  it('エクスポートボタンを押すとダウンロードさせる（1.5 JSONエクスポート）', async () => {
     const fileIO = fakeFileIO();
     const user = userEvent.setup();
     render(
@@ -61,7 +96,7 @@ describe('OperationsBar', () => {
       </AppStateProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'JSONエクスポート' }));
+    await user.click(screen.getByRole('button', { name: 'エクスポート' }));
 
     expect(fileIO.download).toHaveBeenCalledWith(
       JSON.stringify({ version: 1, members: [] }),
@@ -84,7 +119,7 @@ describe('OperationsBar', () => {
     );
 
     const file = new File([json], 'formation.json', { type: 'application/json' });
-    await user.upload(screen.getByLabelText('JSONインポート'), file);
+    await user.upload(screen.getByLabelText('インポート'), file);
 
     expect(memberCountText()).toBe('1');
   });
@@ -101,7 +136,7 @@ describe('OperationsBar', () => {
     );
 
     const file = new File(['not json'], 'invalid.json', { type: 'application/json' });
-    await user.upload(screen.getByLabelText('JSONインポート'), file);
+    await user.upload(screen.getByLabelText('インポート'), file);
 
     expect(alertSpy).toHaveBeenCalledWith(
       '不正なファイルです。フォーメーションのJSONファイルを選択してください。',
