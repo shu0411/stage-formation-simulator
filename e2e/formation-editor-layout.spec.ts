@@ -1,17 +1,33 @@
 import { expect, test, type Page } from '@playwright/test';
-import { STAGE_VIEW_BOX as VIEW_BOX } from '../src/hooks/svgCoordinates';
+import { STAGE_VIEW_BOX as VIEW_BOX, toSvgPoint } from '../src/hooks/svgCoordinates';
 
 const MOBILE_PORTRAIT_VIEWPORT = { width: 390, height: 844 };
 const MOBILE_LANDSCAPE_VIEWPORT = { width: 844, height: 390 };
 
+/** ドメインの立ち位置（バミリ番号）から、俯瞰図のバウンディングボックス内のクライアント座標を求める。 */
+function clientPointForDomainPosition(
+  svgBox: { x: number; y: number; width: number; height: number },
+  domainX: number,
+  domainY: number,
+) {
+  const { x: svgX, y: svgY } = toSvgPoint(domainX, domainY);
+  return {
+    x: svgBox.x + ((svgX - VIEW_BOX.minX) / VIEW_BOX.width) * svgBox.width,
+    y: svgBox.y + ((svgY - VIEW_BOX.minY) / VIEW_BOX.height) * svgBox.height,
+  };
+}
+
 /**
  * 俯瞰図上でメンバーをドラッグすると、手前端・奥端付近でもポインター位置に
  * 追従することを確認する（PC・モバイル縦表示・モバイル横表示で共通に使う）。
+ * 移動単位は0.1（デフォルトの0.25より細かい）を選んでおき、以前の0.05単位の
+ * 吸着を前提にした期待値（1.8・-2.8）がそのまま成り立つようにする。
  */
 async function expectDragFollowsPointerNearEdges(page: Page) {
   await page.goto('/');
   await page.getByLabel('2D編集ポップアップを開く').click();
   await page.getByRole('button', { name: 'メンバーを追加' }).click();
+  await page.getByRole('button', { name: '0.1' }).click();
 
   const svgBox = await page.locator('.formation-editor-dialog__svg').boundingBox();
   expect(svgBox).not.toBeNull();
@@ -235,5 +251,104 @@ test.describe('端末の向き変更', () => {
 
     await expect(page.getByLabel('メンバー名')).toHaveValue('メンバー1');
     await expect(page.locator('[data-testid^="member-"]')).toBeVisible();
+  });
+});
+
+test.describe('移動単位トグル（仕様: 移動単位トグル）', () => {
+  test('初期状態で0.25が選択されている', async ({ page }) => {
+    await page.goto('/');
+    await page.getByLabel('2D編集ポップアップを開く').click();
+
+    await expect(page.getByRole('button', { name: '0.25' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  test('移動単位を選んでドラッグすると、その単位の倍数に座標が揃う', async ({ page }) => {
+    await page.goto('/');
+    await page.getByLabel('2D編集ポップアップを開く').click();
+    await page.getByRole('button', { name: 'メンバーを追加' }).click();
+    await page.getByRole('button', { name: '0.5' }).click();
+
+    const svgBox = await page.locator('.formation-editor-dialog__svg').boundingBox();
+    expect(svgBox).not.toBeNull();
+    if (!svgBox) {
+      return;
+    }
+
+    const memberBox = await page.locator('[data-testid^="member-"]').boundingBox();
+    expect(memberBox).not.toBeNull();
+    if (!memberBox) {
+      return;
+    }
+
+    // ドメイン座標(1.2, 0)は0.5単位では(1, 0)に吸着する
+    const target = clientPointForDomainPosition(svgBox, 1.2, 0);
+    await page.mouse.move(memberBox.x + memberBox.width / 2, memberBox.y + memberBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(target.x, target.y);
+    await page.mouse.up();
+
+    await expect(page.getByLabel('左右')).toHaveValue('1');
+    await expect(page.getByLabel('前後')).toHaveValue('0');
+  });
+
+  test('Shiftキーを押しながらドラッグすると、選択中の単位に関わらず1単位の倍数に座標が揃う', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByLabel('2D編集ポップアップを開く').click();
+    await page.getByRole('button', { name: 'メンバーを追加' }).click();
+    await page.getByRole('button', { name: '0.5' }).click();
+
+    const svgBox = await page.locator('.formation-editor-dialog__svg').boundingBox();
+    expect(svgBox).not.toBeNull();
+    if (!svgBox) {
+      return;
+    }
+
+    const memberBox = await page.locator('[data-testid^="member-"]').boundingBox();
+    expect(memberBox).not.toBeNull();
+    if (!memberBox) {
+      return;
+    }
+
+    // ドメイン座標(2.3, 0)は0.5単位なら(2.5, 0)、1単位(Shift)なら(2, 0)に吸着する
+    const target = clientPointForDomainPosition(svgBox, 2.3, 0);
+    await page.mouse.move(memberBox.x + memberBox.width / 2, memberBox.y + memberBox.height / 2);
+    await page.mouse.down();
+    await page.keyboard.down('Shift');
+    await page.mouse.move(target.x, target.y);
+    await page.keyboard.up('Shift');
+    await page.mouse.up();
+
+    await expect(page.getByLabel('左右')).toHaveValue('2');
+    await expect(page.getByLabel('前後')).toHaveValue('0');
+  });
+
+  test('ポップアップを閉じて開き直しても選択中の単位が維持される', async ({ page }) => {
+    await page.goto('/');
+    await page.getByLabel('2D編集ポップアップを開く').click();
+    await page.getByRole('button', { name: '0.5' }).click();
+    await page.getByRole('button', { name: 'キャンセル' }).click();
+
+    await page.getByLabel('2D編集ポップアップを開く').click();
+
+    await expect(page.getByRole('button', { name: '0.5' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('ページを再読み込みすると選択中の単位は0.25に戻る', async ({ page }) => {
+    await page.goto('/');
+    await page.getByLabel('2D編集ポップアップを開く').click();
+    await page.getByRole('button', { name: '0.5' }).click();
+
+    await page.reload();
+    await page.getByLabel('2D編集ポップアップを開く').click();
+
+    await expect(page.getByRole('button', { name: '0.25' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 });
