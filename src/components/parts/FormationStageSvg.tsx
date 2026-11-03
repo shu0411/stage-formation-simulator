@@ -25,7 +25,7 @@ type FormationStageSvgProps = {
   selectedMemberId?: string | null;
   /** true の場合、メンバーの選択・ドラッグ操作を受け付ける（1.6 メンバーの選択、1.5 立ち位置変更）。 */
   interactive?: boolean;
-  /** ドラッグ時の移動単位（仕様: 移動単位トグル）。interactive が false のときは参照しない。 */
+  /** ドラッグ時の移動幅（仕様: 移動幅プルダウン）。interactive が false のときは参照しない。 */
   dragStep?: DragStep;
   onSelectMember?: (id: string) => void;
   onMoveMember?: (id: string, x: number, y: number) => void;

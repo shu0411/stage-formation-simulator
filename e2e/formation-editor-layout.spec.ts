@@ -18,16 +18,28 @@ function clientPointForDomainPosition(
 }
 
 /**
+ * 「移動幅」プルダウンを開き、指定した移動幅を選ぶ（仕様: 移動幅プルダウン）。
+ * メニューを閉じるトランジションが完了し、俯瞰図へのポインター操作を
+ * 塞がなくなるまで待ってから返す（`role=listbox` の消失だけでは、外側の
+ * `MuiPopover-root` がポインターイベントを塞いだまま残ることがあるため）。
+ */
+async function selectDragStep(page: Page, step: string) {
+  await page.getByRole('combobox', { name: '移動幅' }).click();
+  await page.getByRole('option', { name: step }).click();
+  await expect(page.locator('.MuiPopover-root')).toHaveCount(0);
+}
+
+/**
  * 俯瞰図上でメンバーをドラッグすると、手前端・奥端付近でもポインター位置に
  * 追従することを確認する（PC・モバイル縦表示・モバイル横表示で共通に使う）。
- * 移動単位は0.1（デフォルトの0.25より細かい）を選んでおき、以前の0.05単位の
+ * 移動幅は0.1（デフォルトの0.25より細かい）を選んでおき、以前の0.05単位の
  * 吸着を前提にした期待値（1.8・-2.8）がそのまま成り立つようにする。
  */
 async function expectDragFollowsPointerNearEdges(page: Page) {
   await page.goto('/');
   await page.getByLabel('2D編集ポップアップを開く').click();
   await page.getByRole('button', { name: 'メンバーを追加' }).click();
-  await page.getByRole('button', { name: '0.1' }).click();
+  await selectDragStep(page, '0.1');
 
   const svgBox = await page.locator('.formation-editor-dialog__svg').boundingBox();
   expect(svgBox).not.toBeNull();
@@ -254,22 +266,19 @@ test.describe('端末の向き変更', () => {
   });
 });
 
-test.describe('移動単位トグル（仕様: 移動単位トグル）', () => {
+test.describe('移動幅プルダウン（仕様: 移動幅プルダウン）', () => {
   test('初期状態で0.25が選択されている', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
 
-    await expect(page.getByRole('button', { name: '0.25' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    await expect(page.getByRole('combobox', { name: '移動幅' })).toHaveText('0.25');
   });
 
-  test('移動単位を選んでドラッグすると、その単位の倍数に座標が揃う', async ({ page }) => {
+  test('移動幅を選んでドラッグすると、その単位の倍数に座標が揃う', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
     await page.getByRole('button', { name: 'メンバーを追加' }).click();
-    await page.getByRole('button', { name: '0.5' }).click();
+    await selectDragStep(page, '0.5');
 
     const svgBox = await page.locator('.formation-editor-dialog__svg').boundingBox();
     expect(svgBox).not.toBeNull();
@@ -300,7 +309,7 @@ test.describe('移動単位トグル（仕様: 移動単位トグル）', () => 
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
     await page.getByRole('button', { name: 'メンバーを追加' }).click();
-    await page.getByRole('button', { name: '0.5' }).click();
+    await selectDragStep(page, '0.5');
 
     const svgBox = await page.locator('.formation-editor-dialog__svg').boundingBox();
     expect(svgBox).not.toBeNull();
@@ -330,25 +339,22 @@ test.describe('移動単位トグル（仕様: 移動単位トグル）', () => 
   test('ポップアップを閉じて開き直しても選択中の単位が維持される', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
-    await page.getByRole('button', { name: '0.5' }).click();
+    await selectDragStep(page, '0.5');
     await page.getByRole('button', { name: 'キャンセル' }).click();
 
     await page.getByLabel('2D編集ポップアップを開く').click();
 
-    await expect(page.getByRole('button', { name: '0.5' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('combobox', { name: '移動幅' })).toHaveText('0.5');
   });
 
   test('ページを再読み込みすると選択中の単位は0.25に戻る', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('2D編集ポップアップを開く').click();
-    await page.getByRole('button', { name: '0.5' }).click();
+    await selectDragStep(page, '0.5');
 
     await page.reload();
     await page.getByLabel('2D編集ポップアップを開く').click();
 
-    await expect(page.getByRole('button', { name: '0.25' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    await expect(page.getByRole('combobox', { name: '移動幅' })).toHaveText('0.25');
   });
 });

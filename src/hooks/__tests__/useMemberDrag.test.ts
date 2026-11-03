@@ -86,7 +86,7 @@ describe('useMemberDrag', () => {
     expect(onMove).toHaveBeenCalled();
   });
 
-  it('選択中の移動単位（dragStep）の倍数に座標が揃う（仕様: 移動単位トグルの吸着）', () => {
+  it('選択中の移動幅（dragStep）の倍数に座標が揃う（仕様: 移動幅プルダウンの吸着）', () => {
     const onMove = vi.fn();
     const svgRef = createSvgRef(rect);
     // clientX+9px はドメイン座標で x=0.1（0.1単位にすでに揃っている）に対応する
@@ -100,7 +100,7 @@ describe('useMemberDrag', () => {
     expect(onMove).toHaveBeenCalledWith('id-1', 0.1, Y_AXIS_SCALE.referenceValue);
   });
 
-  it('移動単位が0.25のときは、0.1単位の位置が最も近い0.25の倍数に揃う', () => {
+  it('移動幅が0.25のときは、0.1単位の位置が最も近い0.25の倍数に揃う', () => {
     const onMove = vi.fn();
     const svgRef = createSvgRef(rect);
     // clientX+9pxはドメイン座標でx=0.1。0.25単位では最も近い0の倍数に揃う
@@ -114,7 +114,7 @@ describe('useMemberDrag', () => {
     expect(onMove).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
   });
 
-  it('Shiftキーを押していない間は、選択中の移動単位（0.25）の倍数に揃う', () => {
+  it('Shiftキーを押していない間は、選択中の移動幅（0.25）の倍数に揃う', () => {
     const onMove = vi.fn();
     const svgRef = createSvgRef(rect);
     // clientX+30pxはドメイン座標でx=1/3。0.25単位では最も近い0.25の倍数に揃う
@@ -128,7 +128,7 @@ describe('useMemberDrag', () => {
     expect(onMove).toHaveBeenCalledWith('id-1', 0.25, Y_AXIS_SCALE.referenceValue);
   });
 
-  it('Shiftキーを押している間は、選択中の移動単位（0.25）に関わらず1単位に吸着する（仕様: Shift）', () => {
+  it('Shiftキーを押している間は、選択中の移動幅（0.25）に関わらず1単位に吸着する（仕様: Shift）', () => {
     const onMove = vi.fn();
     const svgRef = createSvgRef(rect);
     // clientX+30pxはドメイン座標でx=1/3。1単位では最も近い0の倍数に揃う

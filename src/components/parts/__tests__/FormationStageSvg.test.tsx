@@ -147,7 +147,7 @@ describe('FormationStageSvg', () => {
     expect(onMoveMember).not.toHaveBeenCalled();
   });
 
-  it('dragStepで指定した移動単位の倍数に揃う（仕様: 移動単位トグル）', () => {
+  it('dragStepで指定した移動幅の倍数に揃う（仕様: 移動幅プルダウン）', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
       left: 0,
       top: 0,

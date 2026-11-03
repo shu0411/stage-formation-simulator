@@ -1,5 +1,5 @@
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
 import { DRAG_STEPS } from '../../domain/dragStep';
 import type { DragStep } from '../../domain/dragStep';
 
@@ -9,29 +9,25 @@ type DragStepSelectorProps = {
 };
 
 /**
- * ドラッグ時の移動単位の切り替えUI（仕様: 移動単位トグル）。選択の解除はできない。
- * `CameraPresetSelector` と異なり、状態（画面幅）に依存せず全レイアウト共通で表示する。
- * `fullWidth` でセル幅に収め、タッチしやすい標準サイズのボタンにする。
- * アプリ状態には依存せず、呼び出し側（`FormationEditorDialog`）が結線する。
+ * ドラッグ時の移動幅の切り替えUI（仕様: 移動幅プルダウン）。選択の解除はできない。
+ * `MemberSelect` と同様、ラベル付きのプルダウン（`TextField` の `select`）として
+ * 実装する。アプリ状態には依存せず、呼び出し側（`FormationEditorDialog`）が結線する。
  */
 export function DragStepSelector({ value, onChange }: DragStepSelectorProps) {
   return (
-    <ToggleButtonGroup
-      exclusive
+    <TextField
+      select
+      size="small"
       fullWidth
+      label="移動幅"
       value={value}
-      aria-label="移動単位"
-      onChange={(_event, dragStep: DragStep | null) => {
-        if (dragStep !== null) {
-          onChange(dragStep);
-        }
-      }}
+      onChange={(event) => onChange(Number(event.target.value) as DragStep)}
     >
       {DRAG_STEPS.map((step) => (
-        <ToggleButton key={step} value={step}>
+        <MenuItem key={step} value={step}>
           {step}
-        </ToggleButton>
+        </MenuItem>
       ))}
-    </ToggleButtonGroup>
+    </TextField>
   );
 }

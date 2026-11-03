@@ -105,7 +105,7 @@ type ControlsCardProps = {
   onSelectDragStep: (dragStep: DragStep) => void;
 };
 
-/** 操作欄 Card（移動単位トグル・メンバーの追加・削除・選択。design.md 1.4 2D 編集ポップアップ）。 */
+/** 操作欄 Card（移動幅プルダウン・メンバーの追加・削除・選択。design.md 1.4 2D 編集ポップアップ）。 */
 function ControlsCard({
   draft,
   selectedMember,

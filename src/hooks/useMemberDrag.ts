@@ -11,7 +11,7 @@ const DRAG_THRESHOLD_PX = 6;
 
 /**
  * 2D エディター上でのメンバーのドラッグ操作を扱うフック（1.5 立ち位置変更、2.3 座標変換、
- * 仕様: 移動単位トグル）。pointerdown で startDrag(id, clientX, clientY) を呼ぶと、
+ * 仕様: 移動幅プルダウン）。pointerdown で startDrag(id, clientX, clientY) を呼ぶと、
  * window の pointermove を追従して SVG のピクセル座標をドメイン座標に変換し、
  * dragStep（Shift押下中は LARGE_DRAG_STEP）の倍数に吸着させたうえで onMove へ渡す。
  * 開始位置からの移動距離が DRAG_THRESHOLD_PX 未満の間は onMove を呼ばない。

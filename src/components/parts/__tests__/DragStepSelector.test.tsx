@@ -11,30 +11,30 @@ function renderSelector(value: DragStep, onChange = vi.fn()) {
 }
 
 describe('DragStepSelector', () => {
-  it('4つの移動単位がすべて表示され、選択中の単位が押下状態になる（仕様: 移動単位トグル）', () => {
+  it('「移動幅」ラベルのプルダウンに、選択中の移動幅が表示される', () => {
     renderSelector(0.25);
 
+    expect(screen.getByRole('combobox', { name: '移動幅' })).toHaveTextContent('0.25');
+  });
+
+  it('プルダウンを開くと4つの移動幅がすべて選択肢として表示される', async () => {
+    const user = userEvent.setup();
+    renderSelector(0.25);
+
+    await user.click(screen.getByRole('combobox', { name: '移動幅' }));
+
     for (const step of DRAG_STEPS) {
-      const button = screen.getByRole('button', { name: String(step) });
-      expect(button).toHaveAttribute('aria-pressed', step === 0.25 ? 'true' : 'false');
+      expect(screen.getByRole('option', { name: String(step) })).toBeInTheDocument();
     }
   });
 
-  it('別の単位を押すとonChangeが呼ばれる', async () => {
+  it('別の単位を選ぶとonChangeが呼ばれる', async () => {
     const user = userEvent.setup();
     const onChange = renderSelector(0.25);
 
-    await user.click(screen.getByRole('button', { name: '1' }));
+    await user.click(screen.getByRole('combobox', { name: '移動幅' }));
+    await user.click(screen.getByRole('option', { name: '1' }));
 
     expect(onChange).toHaveBeenCalledWith(1);
-  });
-
-  it('選択中の単位を押してもonChangeは呼ばれない（選択の解除はできない）', async () => {
-    const user = userEvent.setup();
-    const onChange = renderSelector(0.25);
-
-    await user.click(screen.getByRole('button', { name: '0.25' }));
-
-    expect(onChange).not.toHaveBeenCalled();
   });
 });

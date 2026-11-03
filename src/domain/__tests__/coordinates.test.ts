@@ -51,7 +51,7 @@ describe('snapPositionWithinStage', () => {
     expect(front.y).toBeCloseTo(Y_FRONT);
   });
 
-  it('stepを省略した場合は0.05単位のままになる（仕様: 移動単位トグル、既存の呼び出しへの影響なし）', () => {
+  it('stepを省略した場合は0.05単位のままになる（仕様: 移動幅プルダウン、既存の呼び出しへの影響なし）', () => {
     expect(snapPositionWithinStage(1.234, -2.777)).toEqual({ x: 1.25, y: -2.8 });
   });
 
