@@ -42,5 +42,7 @@ jobs:
         with:
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           additional-allowed-tools: 'Bash(npm:*),Bash(npx:*)'
+          # 既定の100ターンではlint / test / E2Eを含む修正が途中で打ち切られるため引き上げる
+          max-turns: '300'
           # このリポジトリ固有の追加指示があれば書く
           # extra-prompt: ""
