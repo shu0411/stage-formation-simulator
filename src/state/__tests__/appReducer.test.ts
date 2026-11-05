@@ -57,4 +57,28 @@ describe('appReducer', () => {
     expect(next.cameraPresetId).toBe('right');
     expect(next.isDirty).toBe(false);
   });
+
+  it('初期状態の移動幅は0.25である（仕様: 移動幅プルダウン）', () => {
+    const state = createInitialAppState({ members: [] });
+
+    expect(state.dragStep).toBe(0.25);
+  });
+
+  it('SELECT_DRAG_STEP: dragStepを変更し、isDirtyは変更しない（仕様: 移動幅プルダウン）', () => {
+    const state = createInitialAppState({ members: [] });
+
+    const next = appReducer(state, { type: 'SELECT_DRAG_STEP', dragStep: 1 });
+
+    expect(next.dragStep).toBe(1);
+    expect(next.isDirty).toBe(false);
+  });
+
+  it('REPLACE_FORMATION: 選択中の移動幅は維持される（仕様: 移動幅プルダウン）', () => {
+    const state: AppState = { ...createInitialAppState({ members: [] }), dragStep: 0.5 };
+    const imported = { members: [] };
+
+    const next = appReducer(state, { type: 'REPLACE_FORMATION', formation: imported });
+
+    expect(next.dragStep).toBe(0.5);
+  });
 });

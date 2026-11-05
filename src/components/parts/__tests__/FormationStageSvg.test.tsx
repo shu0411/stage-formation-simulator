@@ -123,6 +123,97 @@ describe('FormationStageSvg', () => {
     expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
   });
 
+  it('ドラッグ開始位置から6px未満の移動では、onMoveMemberを呼ばない（仕様: タップ）', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 1520,
+      height: 830,
+      right: 1520,
+      bottom: 830,
+      x: 0,
+      y: 0,
+      toJSON: () => '',
+    });
+    const onMoveMember = vi.fn();
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
+
+    render(<FormationStageSvg formation={formation} interactive onMoveMember={onMoveMember} />);
+    fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 760, clientY: 630 });
+    fireEvent(window, new PointerEvent('pointermove', { clientX: 762, clientY: 631 }));
+
+    expect(onMoveMember).not.toHaveBeenCalled();
+  });
+
+  it('dragStepで指定した移動幅の倍数に揃う（仕様: 移動幅プルダウン）', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 1520,
+      height: 830,
+      right: 1520,
+      bottom: 830,
+      x: 0,
+      y: 0,
+      toJSON: () => '',
+    });
+    const onMoveMember = vi.fn();
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
+
+    render(
+      <FormationStageSvg
+        formation={formation}
+        interactive
+        dragStep={1}
+        onMoveMember={onMoveMember}
+      />,
+    );
+    fireEvent.pointerDown(screen.getByTestId('member-id-1'));
+    // svg空間で (x=0, y=6=STAGE_DEPTH) はステージ中央・手前端
+    fireEvent(window, new PointerEvent('pointermove', { clientX: 760, clientY: 630 }));
+
+    expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
+  });
+
+  it('Shiftキーを押しながらドラッグすると、dragStepに関わらず1単位の倍数に揃う（仕様: Shift）', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 1520,
+      height: 830,
+      right: 1520,
+      bottom: 830,
+      x: 0,
+      y: 0,
+      toJSON: () => '',
+    });
+    const onMoveMember = vi.fn();
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
+
+    render(
+      <FormationStageSvg
+        formation={formation}
+        interactive
+        dragStep={0.25}
+        onMoveMember={onMoveMember}
+      />,
+    );
+    fireEvent.pointerDown(screen.getByTestId('member-id-1'));
+    // clientX=790はドメイン座標でx=0.3333...（0.25単位では0.25、1単位では0に揃う）
+    fireEvent(
+      window,
+      new PointerEvent('pointermove', { clientX: 790, clientY: 630, shiftKey: true }),
+    );
+
+    expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
+  });
+
   it('「上手」「下手」「客席側」の方向ラベルを表示する（メンバー0人でも表示される）', () => {
     render(<FormationStageSvg formation={{ members: [] }} />);
 

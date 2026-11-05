@@ -17,5 +17,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 
     case 'SELECT_CAMERA_PRESET':
       return { ...state, cameraPresetId: action.presetId };
+
+    case 'SELECT_DRAG_STEP':
+      return { ...state, dragStep: action.dragStep };
   }
 }

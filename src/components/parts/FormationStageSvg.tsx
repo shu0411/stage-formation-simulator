@@ -8,6 +8,8 @@ import {
   toSvgPoint,
 } from '../../hooks/svgCoordinates';
 import { toMeters } from '../../domain/axisScale';
+import { DEFAULT_DRAG_STEP } from '../../domain/dragStep';
+import type { DragStep } from '../../domain/dragStep';
 import { gridLineValues } from '../../domain/gridLines';
 import {
   STAGE_DEPTH,
@@ -23,6 +25,8 @@ type FormationStageSvgProps = {
   selectedMemberId?: string | null;
   /** true の場合、メンバーの選択・ドラッグ操作を受け付ける（1.6 メンバーの選択、1.5 立ち位置変更）。 */
   interactive?: boolean;
+  /** ドラッグ時の移動幅（仕様: 移動幅プルダウン）。interactive が false のときは参照しない。 */
+  dragStep?: DragStep;
   onSelectMember?: (id: string) => void;
   onMoveMember?: (id: string, x: number, y: number) => void;
   className?: string;
@@ -113,12 +117,13 @@ export function FormationStageSvg({
   formation,
   selectedMemberId = null,
   interactive = false,
+  dragStep = DEFAULT_DRAG_STEP,
   onSelectMember,
   onMoveMember,
   className,
 }: FormationStageSvgProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const { startDrag } = useMemberDrag(svgRef, (id, x, y) => onMoveMember?.(id, x, y));
+  const { startDrag } = useMemberDrag(svgRef, (id, x, y) => onMoveMember?.(id, x, y), dragStep);
 
   const verticalLineValues = gridLineValues(X_AXIS_SCALE, -STAGE_HALF_WIDTH, STAGE_HALF_WIDTH);
   const horizontalLineValues = gridLineValues(Y_AXIS_SCALE, 0, STAGE_DEPTH);
@@ -230,9 +235,9 @@ export function FormationStageSvg({
               style={{ fill: member.color }}
               onPointerDown={
                 interactive
-                  ? () => {
+                  ? (event) => {
                       onSelectMember?.(member.id);
-                      startDrag(member.id);
+                      startDrag(member.id, event.clientX, event.clientY);
                     }
                   : undefined
               }
