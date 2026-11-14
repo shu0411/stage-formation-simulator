@@ -40,6 +40,8 @@
   stroke: #1f3a8f;
   stroke-width: 0.05;
   cursor: pointer;
+  /* タッチドラッグがスクロール等のジェスチャーに奪われないようにする（仕様: タッチでのドラッグ）。 */
+  touch-action: none;
 }
 
 .member-focus-ring {

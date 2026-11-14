@@ -236,8 +236,9 @@ export function FormationStageSvg({
               onPointerDown={
                 interactive
                   ? (event) => {
+                      event.currentTarget.setPointerCapture(event.pointerId);
                       onSelectMember?.(member.id);
-                      startDrag(member.id, event.clientX, event.clientY);
+                      startDrag(member.id, event.clientX, event.clientY, member.x, member.y);
                     }
                   : undefined
               }
