@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useMemberDrag } from '../../hooks/useMemberDrag';
+import { DRAG_HANDLE_ATTRIBUTE, useSuppressTouchScroll } from '../../hooks/useSuppressTouchScroll';
 import {
   AXIS_LABEL_MARGIN,
   DIRECTION_LABEL_MARGIN,
@@ -124,6 +125,7 @@ export function FormationStageSvg({
 }: FormationStageSvgProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const { startDrag } = useMemberDrag(svgRef, (id, x, y) => onMoveMember?.(id, x, y), dragStep);
+  useSuppressTouchScroll(svgRef, interactive);
 
   const verticalLineValues = gridLineValues(X_AXIS_SCALE, -STAGE_HALF_WIDTH, STAGE_HALF_WIDTH);
   const horizontalLineValues = gridLineValues(Y_AXIS_SCALE, 0, STAGE_DEPTH);
@@ -228,6 +230,7 @@ export function FormationStageSvg({
             />
             <circle
               data-testid={`member-${member.id}`}
+              {...(interactive ? { [DRAG_HANDLE_ATTRIBUTE]: '' } : {})}
               className={selected ? 'member member--selected' : 'member'}
               cx={point.x}
               cy={point.y}

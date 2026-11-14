@@ -170,6 +170,27 @@ describe('FormationStageSvg', () => {
     expect(onMoveMember).toHaveBeenCalledWith('id-1', 1, 0);
   });
 
+  it('操作可能なとき、メンバーの円で始まったタッチはスクロールを抑止し、それ以外の領域では抑止しない（仕様: タッチでのドラッグ）', () => {
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
+
+    const { container } = render(<FormationStageSvg formation={formation} interactive />);
+
+    expect(fireEvent.touchStart(screen.getByTestId('member-id-1'))).toBe(false);
+    expect(fireEvent.touchStart(container.querySelector('.stage-border')!)).toBe(true);
+  });
+
+  it('操作不可（サムネイル）のときは、メンバーの円で始まったタッチでもスクロールを抑止しない', () => {
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
+
+    render(<FormationStageSvg formation={formation} />);
+
+    expect(fireEvent.touchStart(screen.getByTestId('member-id-1'))).toBe(true);
+  });
+
   it('ドラッグ開始位置から6px未満の移動では、onMoveMemberを呼ばない（仕様: タップ）', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
       left: 0,
