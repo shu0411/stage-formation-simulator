@@ -116,11 +116,79 @@ describe('FormationStageSvg', () => {
     };
 
     render(<FormationStageSvg formation={formation} interactive onMoveMember={onMoveMember} />);
-    fireEvent.pointerDown(screen.getByTestId('member-id-1'));
+    // メンバー（x=0, y=0）の中心そのものをクライアント座標(760, 450)で掴む
+    fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 760, clientY: 450 });
     // svg空間で (x=0, y=6=STAGE_DEPTH) はステージ中央・手前端
     fireEvent(window, new PointerEvent('pointermove', { clientX: 760, clientY: 630 }));
 
     expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
+  });
+
+  it('pointerdown時にsetPointerCaptureが呼ばれる（タッチでの追従の安定性向上）', () => {
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
+
+    render(<FormationStageSvg formation={formation} interactive />);
+    const member = screen.getByTestId('member-id-1');
+    const setPointerCapture = vi.spyOn(member, 'setPointerCapture');
+    fireEvent.pointerDown(member, { pointerId: 1 });
+
+    expect(setPointerCapture).toHaveBeenCalledWith(1);
+  });
+
+  it('円の中心からズレた位置を掴んでドラッグしても、そのズレを保ったまま追従する（仕様: 掴んだ位置のズレを保つ）', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 1520,
+      height: 830,
+      right: 1520,
+      bottom: 830,
+      x: 0,
+      y: 0,
+      toJSON: () => '',
+    });
+    const onMoveMember = vi.fn();
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
+
+    render(
+      <FormationStageSvg
+        formation={formation}
+        interactive
+        dragStep={1}
+        onMoveMember={onMoveMember}
+      />,
+    );
+    // メンバー中心（x=0, y=0, クライアント座標760,450）から90px（x軸1単位）ズレた位置を掴む
+    fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 850, clientY: 450 });
+    // さらに90px動かす。中心が指先へ飛べばx=2になるが、ズレを保てばx=1になる
+    fireEvent(window, new PointerEvent('pointermove', { clientX: 940, clientY: 450 }));
+
+    expect(onMoveMember).toHaveBeenCalledWith('id-1', 1, 0);
+  });
+
+  it('操作可能なとき、メンバーの円で始まったタッチはスクロールを抑止し、それ以外の領域では抑止しない（仕様: タッチでのドラッグ）', () => {
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
+
+    const { container } = render(<FormationStageSvg formation={formation} interactive />);
+
+    expect(fireEvent.touchStart(screen.getByTestId('member-id-1'))).toBe(false);
+    expect(fireEvent.touchStart(container.querySelector('.stage-border')!)).toBe(true);
+  });
+
+  it('操作不可（サムネイル）のときは、メンバーの円で始まったタッチでもスクロールを抑止しない', () => {
+    const formation: Formation = {
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    };
+
+    render(<FormationStageSvg formation={formation} />);
+
+    expect(fireEvent.touchStart(screen.getByTestId('member-id-1'))).toBe(true);
   });
 
   it('ドラッグ開始位置から6px未満の移動では、onMoveMemberを呼ばない（仕様: タップ）', () => {
@@ -172,7 +240,8 @@ describe('FormationStageSvg', () => {
         onMoveMember={onMoveMember}
       />,
     );
-    fireEvent.pointerDown(screen.getByTestId('member-id-1'));
+    // メンバー（x=0, y=0）の中心そのものをクライアント座標(760, 450)で掴む
+    fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 760, clientY: 450 });
     // svg空間で (x=0, y=6=STAGE_DEPTH) はステージ中央・手前端
     fireEvent(window, new PointerEvent('pointermove', { clientX: 760, clientY: 630 }));
 
@@ -204,7 +273,8 @@ describe('FormationStageSvg', () => {
         onMoveMember={onMoveMember}
       />,
     );
-    fireEvent.pointerDown(screen.getByTestId('member-id-1'));
+    // メンバー（x=0, y=0）の中心そのものをクライアント座標(760, 450)で掴む
+    fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 760, clientY: 450 });
     // clientX=790はドメイン座標でx=0.3333...（0.25単位では0.25、1単位では0に揃う）
     fireEvent(
       window,
