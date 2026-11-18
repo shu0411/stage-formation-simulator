@@ -2,50 +2,48 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FormationStageSvg } from '../FormationStageSvg';
 import { STAGE_DEPTH, STAGE_HALF_WIDTH, Y_AXIS_SCALE } from '../../../domain/stageConstants';
-import type { Formation } from '../../../domain/types';
+import type { PlacedMember } from '../../../domain/types';
 
 describe('FormationStageSvg', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('グリッド線を表示する（1.6 グリッド表示）', () => {
-    const { container } = render(<FormationStageSvg formation={{ members: [] }} />);
+  it('グリッド線を表示する(1.6 グリッド表示)', () => {
+    const { container } = render(<FormationStageSvg members={[]} />);
 
     expect(container.querySelectorAll('.grid-line').length).toBeGreaterThan(0);
     expect(container.querySelectorAll('.grid-line--center').length).toBeGreaterThan(0);
   });
 
-  it('グリッドの下辺・左辺・右辺にグリッド番号を表示する（1.6 グリッド表示）', () => {
-    render(<FormationStageSvg formation={{ members: [] }} />);
+  it('グリッドの下辺・左辺・右辺にグリッド番号を表示する(1.6 グリッド表示)', () => {
+    render(<FormationStageSvg members={[]} />);
 
     expect(screen.getAllByText('0').length).toBeGreaterThan(0);
     expect(screen.getAllByText(String(Y_AXIS_SCALE.referenceValue)).length).toBeGreaterThan(0);
   });
 
-  it('前後（Y軸）の0のグリッド線を太線で表示する（左右軸の0番の線と同様）', () => {
-    const { container } = render(<FormationStageSvg formation={{ members: [] }} />);
+  it('前後(Y軸)の0のグリッド線を太線で表示する(左右軸の0番の線と同様)', () => {
+    const { container } = render(<FormationStageSvg members={[]} />);
 
-    // 縦線（左右軸）・横線（前後軸）それぞれ1本ずつ、0番の線がgrid-line--centerになる
+    // 縦線(左右軸)・横線(前後軸)それぞれ1本ずつ、0番の線がgrid-line--centerになる
     const centerLines = container.querySelectorAll('.grid-line--center');
     expect(centerLines.length).toBe(2);
   });
 
-  it('メンバーが0人のときはステージのみ表示する（1.5 エラー・空状態）', () => {
-    const { container } = render(<FormationStageSvg formation={{ members: [] }} />);
+  it('メンバーが0人のときはステージのみ表示する(1.5 エラー・空状態)', () => {
+    const { container } = render(<FormationStageSvg members={[]} />);
 
     expect(container.querySelectorAll('.member').length).toBe(0);
   });
 
-  it('メンバーを描画し、選択中のメンバーを視覚的に区別する（1.6 メンバーの選択）', () => {
-    const formation: Formation = {
-      members: [
-        { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
-        { id: 'id-2', name: 'メンバー2', x: 1, y: 1, color: '#00ff00', height: 170 },
-      ],
-    };
+  it('メンバーを描画し、選択中のメンバーを視覚的に区別する(1.6 メンバーの選択)', () => {
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+      { id: 'id-2', name: 'メンバー2', x: 1, y: 1, color: '#00ff00', height: 170 },
+    ];
 
-    render(<FormationStageSvg formation={formation} selectedMemberId="id-1" />);
+    render(<FormationStageSvg members={members} selectedMemberId="id-1" />);
 
     expect(screen.getByTestId('member-id-1').getAttribute('class')).toContain('member--selected');
     expect(screen.getByTestId('member-id-2').getAttribute('class')).not.toContain(
@@ -53,15 +51,13 @@ describe('FormationStageSvg', () => {
     );
   });
 
-  it('メンバーを表す円をメンバーのカラーで表示する（1.5 メンバーカラー編集）', () => {
-    const formation: Formation = {
-      members: [
-        { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
-        { id: 'id-2', name: 'メンバー2', x: 1, y: 1, color: '#00ff00', height: 170 },
-      ],
-    };
+  it('メンバーを表す円をメンバーのカラーで表示する(1.5 メンバーカラー編集)', () => {
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+      { id: 'id-2', name: 'メンバー2', x: 1, y: 1, color: '#00ff00', height: 170 },
+    ];
 
-    render(<FormationStageSvg formation={formation} />);
+    render(<FormationStageSvg members={members} />);
 
     expect(screen.getByTestId('member-id-1')).toHaveStyle({ fill: '#ff0000' });
     expect(screen.getByTestId('member-id-2')).toHaveStyle({ fill: '#00ff00' });
@@ -69,37 +65,33 @@ describe('FormationStageSvg', () => {
 
   it('interactiveがfalseのときメンバーを押しても選択されない', () => {
     const onSelectMember = vi.fn();
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
     render(
-      <FormationStageSvg
-        formation={formation}
-        interactive={false}
-        onSelectMember={onSelectMember}
-      />,
+      <FormationStageSvg members={members} interactive={false} onSelectMember={onSelectMember} />,
     );
     fireEvent.pointerDown(screen.getByTestId('member-id-1'));
 
     expect(onSelectMember).not.toHaveBeenCalled();
   });
 
-  it('interactiveがtrueのときメンバーを押すと選択される（ドラッグ開始時点で選択し、移動完了を待たない）', () => {
+  it('interactiveがtrueのときメンバーを押すと選択される(ドラッグ開始時点で選択し、移動完了を待たない)', () => {
     const onSelectMember = vi.fn();
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
-    render(<FormationStageSvg formation={formation} interactive onSelectMember={onSelectMember} />);
+    render(<FormationStageSvg members={members} interactive onSelectMember={onSelectMember} />);
     fireEvent.pointerDown(screen.getByTestId('member-id-1'));
 
     expect(onSelectMember).toHaveBeenCalledWith('id-1');
   });
 
-  it('interactiveがtrueのときドラッグするとonMoveMemberが呼ばれる（1.5 立ち位置変更）', () => {
+  it('interactiveがtrueのときドラッグするとonMoveMemberが呼ばれる(1.5 立ち位置変更)', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
-      // STAGE_VIEW_BOX（x: -7.6〜7.6, y: -0.3〜8）に対して 100px/m のスケールで対応させる
+      // STAGE_VIEW_BOX(x: -7.6〜7.6, y: -0.3〜8)に対して 100px/m のスケールで対応させる
       left: 0,
       top: 0,
       width: 1520,
@@ -111,12 +103,12 @@ describe('FormationStageSvg', () => {
       toJSON: () => '',
     });
     const onMoveMember = vi.fn();
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
-    render(<FormationStageSvg formation={formation} interactive onMoveMember={onMoveMember} />);
-    // メンバー（x=0, y=0）の中心そのものをクライアント座標(760, 450)で掴む
+    render(<FormationStageSvg members={members} interactive onMoveMember={onMoveMember} />);
+    // メンバー(x=0, y=0)の中心そのものをクライアント座標(760, 450)で掴む
     fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 760, clientY: 450 });
     // svg空間で (x=0, y=6=STAGE_DEPTH) はステージ中央・手前端
     fireEvent(window, new PointerEvent('pointermove', { clientX: 760, clientY: 630 }));
@@ -124,12 +116,12 @@ describe('FormationStageSvg', () => {
     expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
   });
 
-  it('pointerdown時にsetPointerCaptureが呼ばれる（タッチでの追従の安定性向上）', () => {
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+  it('pointerdown時にsetPointerCaptureが呼ばれる(タッチでの追従の安定性向上)', () => {
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
-    render(<FormationStageSvg formation={formation} interactive />);
+    render(<FormationStageSvg members={members} interactive />);
     const member = screen.getByTestId('member-id-1');
     const setPointerCapture = vi.spyOn(member, 'setPointerCapture');
     fireEvent.pointerDown(member, { pointerId: 1 });
@@ -137,7 +129,7 @@ describe('FormationStageSvg', () => {
     expect(setPointerCapture).toHaveBeenCalledWith(1);
   });
 
-  it('円の中心からズレた位置を掴んでドラッグしても、そのズレを保ったまま追従する（仕様: 掴んだ位置のズレを保つ）', () => {
+  it('円の中心からズレた位置を掴んでドラッグしても、そのズレを保ったまま追従する(仕様: 掴んだ位置のズレを保つ)', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
       left: 0,
       top: 0,
@@ -150,19 +142,14 @@ describe('FormationStageSvg', () => {
       toJSON: () => '',
     });
     const onMoveMember = vi.fn();
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
     render(
-      <FormationStageSvg
-        formation={formation}
-        interactive
-        dragStep={1}
-        onMoveMember={onMoveMember}
-      />,
+      <FormationStageSvg members={members} interactive dragStep={1} onMoveMember={onMoveMember} />,
     );
-    // メンバー中心（x=0, y=0, クライアント座標760,450）から90px（x軸1単位）ズレた位置を掴む
+    // メンバー中心(x=0, y=0, クライアント座標760,450)から90px(x軸1単位)ズレた位置を掴む
     fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 850, clientY: 450 });
     // さらに90px動かす。中心が指先へ飛べばx=2になるが、ズレを保てばx=1になる
     fireEvent(window, new PointerEvent('pointermove', { clientX: 940, clientY: 450 }));
@@ -170,28 +157,28 @@ describe('FormationStageSvg', () => {
     expect(onMoveMember).toHaveBeenCalledWith('id-1', 1, 0);
   });
 
-  it('操作可能なとき、メンバーの円で始まったタッチはスクロールを抑止し、それ以外の領域では抑止しない（仕様: タッチでのドラッグ）', () => {
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+  it('操作可能なとき、メンバーの円で始まったタッチはスクロールを抑止し、それ以外の領域では抑止しない(仕様: タッチでのドラッグ)', () => {
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
-    const { container } = render(<FormationStageSvg formation={formation} interactive />);
+    const { container } = render(<FormationStageSvg members={members} interactive />);
 
     expect(fireEvent.touchStart(screen.getByTestId('member-id-1'))).toBe(false);
     expect(fireEvent.touchStart(container.querySelector('.stage-border')!)).toBe(true);
   });
 
-  it('操作不可（サムネイル）のときは、メンバーの円で始まったタッチでもスクロールを抑止しない', () => {
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+  it('操作不可(サムネイル)のときは、メンバーの円で始まったタッチでもスクロールを抑止しない', () => {
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
-    render(<FormationStageSvg formation={formation} />);
+    render(<FormationStageSvg members={members} />);
 
     expect(fireEvent.touchStart(screen.getByTestId('member-id-1'))).toBe(true);
   });
 
-  it('ドラッグ開始位置から6px未満の移動では、onMoveMemberを呼ばない（仕様: タップ）', () => {
+  it('ドラッグ開始位置から6px未満の移動では、onMoveMemberを呼ばない(仕様: タップ)', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
       left: 0,
       top: 0,
@@ -204,18 +191,18 @@ describe('FormationStageSvg', () => {
       toJSON: () => '',
     });
     const onMoveMember = vi.fn();
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
-    render(<FormationStageSvg formation={formation} interactive onMoveMember={onMoveMember} />);
+    render(<FormationStageSvg members={members} interactive onMoveMember={onMoveMember} />);
     fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 760, clientY: 630 });
     fireEvent(window, new PointerEvent('pointermove', { clientX: 762, clientY: 631 }));
 
     expect(onMoveMember).not.toHaveBeenCalled();
   });
 
-  it('dragStepで指定した移動幅の倍数に揃う（仕様: 移動幅プルダウン）', () => {
+  it('dragStepで指定した移動幅の倍数に揃う(仕様: 移動幅プルダウン)', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
       left: 0,
       top: 0,
@@ -228,19 +215,14 @@ describe('FormationStageSvg', () => {
       toJSON: () => '',
     });
     const onMoveMember = vi.fn();
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
     render(
-      <FormationStageSvg
-        formation={formation}
-        interactive
-        dragStep={1}
-        onMoveMember={onMoveMember}
-      />,
+      <FormationStageSvg members={members} interactive dragStep={1} onMoveMember={onMoveMember} />,
     );
-    // メンバー（x=0, y=0）の中心そのものをクライアント座標(760, 450)で掴む
+    // メンバー(x=0, y=0)の中心そのものをクライアント座標(760, 450)で掴む
     fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 760, clientY: 450 });
     // svg空間で (x=0, y=6=STAGE_DEPTH) はステージ中央・手前端
     fireEvent(window, new PointerEvent('pointermove', { clientX: 760, clientY: 630 }));
@@ -248,7 +230,7 @@ describe('FormationStageSvg', () => {
     expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
   });
 
-  it('Shiftキーを押しながらドラッグすると、dragStepに関わらず1単位の倍数に揃う（仕様: Shift）', () => {
+  it('Shiftキーを押しながらドラッグすると、dragStepに関わらず1単位の倍数に揃う(仕様: Shift)', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue({
       left: 0,
       top: 0,
@@ -261,21 +243,21 @@ describe('FormationStageSvg', () => {
       toJSON: () => '',
     });
     const onMoveMember = vi.fn();
-    const formation: Formation = {
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
-    };
+    const members: PlacedMember[] = [
+      { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+    ];
 
     render(
       <FormationStageSvg
-        formation={formation}
+        members={members}
         interactive
         dragStep={0.25}
         onMoveMember={onMoveMember}
       />,
     );
-    // メンバー（x=0, y=0）の中心そのものをクライアント座標(760, 450)で掴む
+    // メンバー(x=0, y=0)の中心そのものをクライアント座標(760, 450)で掴む
     fireEvent.pointerDown(screen.getByTestId('member-id-1'), { clientX: 760, clientY: 450 });
-    // clientX=790はドメイン座標でx=0.3333...（0.25単位では0.25、1単位では0に揃う）
+    // clientX=790はドメイン座標でx=0.3333...(0.25単位では0.25、1単位では0に揃う)
     fireEvent(
       window,
       new PointerEvent('pointermove', { clientX: 790, clientY: 630, shiftKey: true }),
@@ -284,16 +266,16 @@ describe('FormationStageSvg', () => {
     expect(onMoveMember).toHaveBeenCalledWith('id-1', 0, Y_AXIS_SCALE.referenceValue);
   });
 
-  it('「上手」「下手」「客席側」の方向ラベルを表示する（メンバー0人でも表示される）', () => {
-    render(<FormationStageSvg formation={{ members: [] }} />);
+  it('「上手」「下手」「客席側」の方向ラベルを表示する(メンバー0人でも表示される)', () => {
+    render(<FormationStageSvg members={[]} />);
 
     expect(screen.getByText('上手')).toBeInTheDocument();
     expect(screen.getByText('下手')).toBeInTheDocument();
     expect(screen.getByText('客席側')).toBeInTheDocument();
   });
 
-  it('「上手」はステージの+X側（右側）、「下手」は-X側（左側）に表示される', () => {
-    render(<FormationStageSvg formation={{ members: [] }} />);
+  it('「上手」はステージの+X側(右側)、「下手」は-X側(左側)に表示される', () => {
+    render(<FormationStageSvg members={[]} />);
 
     const joteX = Number(screen.getByText('上手').getAttribute('x'));
     const shimoteX = Number(screen.getByText('下手').getAttribute('x'));
@@ -302,22 +284,22 @@ describe('FormationStageSvg', () => {
     expect(shimoteX).toBeLessThan(-STAGE_HALF_WIDTH);
   });
 
-  it('「客席側」はY軸増加方向（ステージ手前端の外側、俯瞰図の下側）に表示される', () => {
-    render(<FormationStageSvg formation={{ members: [] }} />);
+  it('「客席側」はY軸増加方向(ステージ手前端の外側、俯瞰図の下側)に表示される', () => {
+    render(<FormationStageSvg members={[]} />);
 
     const kyakusekiY = Number(screen.getByText('客席側').getAttribute('y'));
 
     expect(kyakusekiY).toBeGreaterThan(STAGE_DEPTH);
   });
 
-  it('方向ラベルはそれぞれ枠（矩形）で囲んで表示される', () => {
-    const { container } = render(<FormationStageSvg formation={{ members: [] }} />);
+  it('方向ラベルはそれぞれ枠(矩形)で囲んで表示される', () => {
+    const { container } = render(<FormationStageSvg members={[]} />);
 
     expect(container.querySelectorAll('.direction-label-box').length).toBe(3);
   });
 
   it('「上手」「下手」は縦書きで、「客席側」は横書きで表示される', () => {
-    render(<FormationStageSvg formation={{ members: [] }} />);
+    render(<FormationStageSvg members={[]} />);
 
     expect(screen.getByText('上手')).toHaveStyle({ writingMode: 'vertical-rl' });
     expect(screen.getByText('下手')).toHaveStyle({ writingMode: 'vertical-rl' });

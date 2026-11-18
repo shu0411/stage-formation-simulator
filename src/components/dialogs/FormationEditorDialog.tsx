@@ -16,6 +16,7 @@ import { MemberNameInput } from '../parts/MemberNameInput';
 import { MemberPositionInput } from '../parts/MemberPositionInput';
 import { MemberSelect } from '../parts/MemberSelect';
 import { useEditorLayout } from '../../hooks/useEditorLayout';
+import { getPlacedMembers } from '../../domain/show';
 import {
   addMember,
   changeMemberColor,
@@ -26,7 +27,7 @@ import {
 } from '../../domain/memberOperations';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
 import type { DragStep } from '../../domain/dragStep';
-import type { Formation, Member } from '../../domain/types';
+import type { Member, PlacedMember } from '../../domain/types';
 import type { GridSize } from '@mui/material/Grid';
 import type { ResponsiveStyleValue } from '@mui/system';
 import type { SxProps, Theme } from '@mui/material/styles';
@@ -42,7 +43,7 @@ const MOBILE_CARD_CONTENT_SX: SxProps<Theme> = { p: 1.5, '&:last-child': { pb: 1
 const DISCARD_CONFIRM_MESSAGE = '編集内容を破棄して閉じますか？';
 
 type OverviewCardProps = {
-  draft: Formation;
+  members: PlacedMember[];
   selectedMemberId: string | null;
   dragStep: DragStep;
   onSelectMember: (id: string) => void;
@@ -53,7 +54,7 @@ type OverviewCardProps = {
 
 /** 俯瞰図 Card（design.md 1.4 2D 編集ポップアップ）。 */
 function OverviewCard({
-  draft,
+  members,
   selectedMemberId,
   dragStep,
   onSelectMember,
@@ -76,7 +77,7 @@ function OverviewCard({
       }
     >
       <FormationStageSvg
-        formation={draft}
+        members={members}
         selectedMemberId={selectedMemberId}
         interactive
         dragStep={dragStep}
@@ -93,8 +94,8 @@ function OverviewCard({
 }
 
 type ControlsCardProps = {
-  draft: Formation;
-  selectedMember: Member | null;
+  members: Member[];
+  selectedMember: PlacedMember | null;
   selectedMemberId: string | null;
   dragStep: DragStep;
   fieldGridSize: ResponsiveStyleValue<GridSize>;
@@ -107,7 +108,7 @@ type ControlsCardProps = {
 
 /** 操作欄 Card（移動幅プルダウン・メンバーの追加・削除・選択。design.md 1.4 2D 編集ポップアップ）。 */
 function ControlsCard({
-  draft,
+  members,
   selectedMember,
   selectedMemberId,
   dragStep,
@@ -142,7 +143,7 @@ function ControlsCard({
           </Grid>
           <Grid size={fieldGridSize}>
             <MemberSelect
-              members={draft.members}
+              members={members}
               selectedMemberId={selectedMemberId}
               onSelect={onSelectMember}
             />
@@ -154,7 +155,7 @@ function ControlsCard({
 }
 
 type InputsCardProps = {
-  selectedMember: Member | null;
+  selectedMember: PlacedMember | null;
   fieldGridSize: ResponsiveStyleValue<GridSize>;
   cardContentSx?: SxProps<Theme>;
   onRename: (name: string) => void;
@@ -211,6 +212,8 @@ function InputsCard({
  * メンバーの追加・削除・立ち位置変更（ドラッグ・数値入力）・名前編集は
  * ダイアログ内のローカル state（下書き）に対して行い、確定操作でのみ
  * アプリ全体の状態へ反映する（2.3 編集セッションと確定・破棄）。
+ * 編集対象のフォーメーションは、開いた時点の `selectedFormationId` に固定する
+ * （ポップアップ内では切り替えない。2.2）。
  * レイアウトは `useEditorLayout` の判定に応じて PC・モバイル縦表示・
  * モバイル横表示の 3 種類を切り替える（design.md 1.6 対応環境）。
  */
@@ -219,11 +222,13 @@ export function FormationEditorDialog() {
   const dispatch = useAppDispatch();
   const layout = useEditorLayout();
 
-  const [draft, setDraft] = useState(state.formation);
+  const [draft, setDraft] = useState(state.show);
+  const [editingFormationId] = useState(state.selectedFormationId);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [isDraftDirty, setIsDraftDirty] = useState(false);
 
-  const selectedMember = draft.members.find((member) => member.id === selectedMemberId) ?? null;
+  const placedMembers = getPlacedMembers(draft, editingFormationId);
+  const selectedMember = placedMembers.find((member) => member.id === selectedMemberId) ?? null;
 
   if (!state.isEditorOpen) {
     return null;
@@ -253,7 +258,7 @@ export function FormationEditorDialog() {
   };
 
   const handleMove = (id: string, x: number, y: number) => {
-    setDraft((current) => moveMember(current, id, x, y));
+    setDraft((current) => moveMember(current, editingFormationId, id, x, y));
     setIsDraftDirty(true);
   };
 
@@ -286,7 +291,7 @@ export function FormationEditorDialog() {
   };
 
   const handleConfirm = () => {
-    dispatch({ type: 'REPLACE_FORMATION', formation: draft });
+    dispatch({ type: 'REPLACE_SHOW', show: draft });
     dispatch({ type: 'CLOSE_EDITOR' });
   };
 
@@ -319,7 +324,7 @@ export function FormationEditorDialog() {
         >
           <Box sx={{ minWidth: 0, minHeight: 0 }}>
             <OverviewCard
-              draft={draft}
+              members={placedMembers}
               selectedMemberId={selectedMemberId}
               dragStep={state.dragStep}
               onSelectMember={setSelectedMemberId}
@@ -339,7 +344,7 @@ export function FormationEditorDialog() {
             }}
           >
             <ControlsCard
-              draft={draft}
+              members={draft.members}
               selectedMember={selectedMember}
               selectedMemberId={selectedMemberId}
               dragStep={state.dragStep}
@@ -365,14 +370,14 @@ export function FormationEditorDialog() {
         <DialogContent sx={isMobile ? { p: 1 } : undefined}>
           <Stack spacing={1.5}>
             <OverviewCard
-              draft={draft}
+              members={placedMembers}
               selectedMemberId={selectedMemberId}
               dragStep={state.dragStep}
               onSelectMember={setSelectedMemberId}
               onMoveMember={handleMove}
             />
             <ControlsCard
-              draft={draft}
+              members={draft.members}
               selectedMember={selectedMember}
               selectedMemberId={selectedMemberId}
               dragStep={state.dragStep}

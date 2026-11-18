@@ -24,9 +24,9 @@ function IsEditorOpenProbe() {
   return <p data-testid="is-editor-open">{String(state.isEditorOpen)}</p>;
 }
 
-function FormationMemberCountProbe() {
+function ShowMemberCountProbe() {
   const state = useAppState();
-  return <p data-testid="formation-member-count">{state.formation.members.length}</p>;
+  return <p data-testid="show-member-count">{state.show.members.length}</p>;
 }
 
 function renderDialog(json: string | null = null) {
@@ -34,7 +34,7 @@ function renderDialog(json: string | null = null) {
     <AppStateProvider storage={noopStorage(json)}>
       <OpenEditorOnMount />
       <IsEditorOpenProbe />
-      <FormationMemberCountProbe />
+      <ShowMemberCountProbe />
       <FormationEditorDialog />
     </AppStateProvider>,
   );
@@ -48,12 +48,37 @@ function clickBackdrop() {
   return userEvent.click(backdrop);
 }
 
+function showJsonWithOneMember() {
+  return JSON.stringify({
+    version: 2,
+    members: [{ id: 'id-1', name: 'メンバー1', color: '#4a7dff', height: 160 }],
+    formations: [{ id: 'f-1', name: 'フォーメーション1', positions: { 'id-1': { x: 0, y: 0 } } }],
+  });
+}
+
+function showJsonWithTwoMembers() {
+  return JSON.stringify({
+    version: 2,
+    members: [
+      { id: 'id-1', name: 'メンバー1', color: '#4a7dff', height: 160 },
+      { id: 'id-2', name: 'メンバー2', color: '#4a7dff', height: 160 },
+    ],
+    formations: [
+      {
+        id: 'f-1',
+        name: 'フォーメーション1',
+        positions: { 'id-1': { x: 0, y: 0 }, 'id-2': { x: 1, y: 1 } },
+      },
+    ],
+  });
+}
+
 describe('FormationEditorDialog', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('isEditorOpenがfalseのときは何も表示しない（1.5 2Dエディター表示）', () => {
+  it('isEditorOpenがfalseのときは何も表示しない(1.5 2Dエディター表示)', () => {
     render(
       <AppStateProvider storage={noopStorage()}>
         <FormationEditorDialog />
@@ -63,7 +88,7 @@ describe('FormationEditorDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('確定ボタンを押すと編集内容がアプリ全体の状態へ反映され、ダイアログが閉じる（2.3 編集セッションと確定・破棄）', async () => {
+  it('確定ボタンを押すと編集内容がアプリ全体の状態へ反映され、ダイアログが閉じる(2.3 編集セッションと確定・破棄)', async () => {
     const user = userEvent.setup();
     renderDialog();
 
@@ -71,10 +96,10 @@ describe('FormationEditorDialog', () => {
     await user.click(screen.getByRole('button', { name: '確定' }));
 
     expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
-    expect(screen.getByTestId('formation-member-count').textContent).toBe('1');
+    expect(screen.getByTestId('show-member-count').textContent).toBe('1');
   });
 
-  describe('キャンセル・ダイアログ外クリック・Escapeキーでの破棄（2.3 編集セッションと確定・破棄）', () => {
+  describe('キャンセル・ダイアログ外クリック・Escapeキーでの破棄(2.3 編集セッションと確定・破棄)', () => {
     it('編集していない状態でキャンセルボタンを押すと、確認なしに閉じる', async () => {
       const confirmSpy = vi.spyOn(window, 'confirm');
       const user = userEvent.setup();
@@ -95,7 +120,7 @@ describe('FormationEditorDialog', () => {
       await user.click(screen.getByRole('button', { name: 'キャンセル' }));
 
       expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
-      expect(screen.getByTestId('formation-member-count').textContent).toBe('0');
+      expect(screen.getByTestId('show-member-count').textContent).toBe('0');
     });
 
     it('編集した状態でキャンセルボタンを押し、確認ダイアログでキャンセルすると、ダイアログは閉じず編集内容も保持される', async () => {
@@ -129,7 +154,7 @@ describe('FormationEditorDialog', () => {
       await clickBackdrop();
 
       expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
-      expect(screen.getByTestId('formation-member-count').textContent).toBe('0');
+      expect(screen.getByTestId('show-member-count').textContent).toBe('0');
     });
 
     it('確認ダイアログでキャンセルすると、ダイアログは閉じず編集内容も保持される', async () => {
@@ -153,7 +178,7 @@ describe('FormationEditorDialog', () => {
       await user.keyboard('{Escape}');
 
       expect(screen.getByTestId('is-editor-open').textContent).toBe('false');
-      expect(screen.getByTestId('formation-member-count').textContent).toBe('0');
+      expect(screen.getByTestId('show-member-count').textContent).toBe('0');
     });
   });
 
@@ -167,7 +192,7 @@ describe('FormationEditorDialog', () => {
       expect(screen.getByTestId(/^member-/)).toBeInTheDocument();
     });
 
-    it('追加したメンバーが選択状態になり、原点の座標がフォームに表示される（1.6 メンバーの選択）', async () => {
+    it('追加したメンバーが選択状態になり、原点の座標がフォームに表示される(1.6 メンバーの選択)', async () => {
       const user = userEvent.setup();
       renderDialog();
 
@@ -181,26 +206,16 @@ describe('FormationEditorDialog', () => {
     });
   });
 
-  describe('メンバー選択（プルダウン）', () => {
-    function formationJsonWithTwoMembers() {
-      return JSON.stringify({
-        version: 1,
-        members: [
-          { id: 'id-1', name: 'メンバー1', x: 0, y: 0 },
-          { id: 'id-2', name: 'メンバー2', x: 1, y: 1 },
-        ],
-      });
-    }
-
+  describe('メンバー選択(プルダウン)', () => {
     it('メンバーがいないとき、プルダウンは無効化される', () => {
       renderDialog();
 
       expect(screen.getByLabelText('メンバーを選択')).toHaveAttribute('aria-disabled', 'true');
     });
 
-    it('プルダウンでメンバーを選ぶと、そのメンバーが選択状態になる（1.6 メンバーの選択）', async () => {
+    it('プルダウンでメンバーを選ぶと、そのメンバーが選択状態になる(1.6 メンバーの選択)', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithTwoMembers());
+      renderDialog(showJsonWithTwoMembers());
 
       await user.click(screen.getByLabelText('メンバーを選択'));
       await user.click(screen.getByRole('option', { name: 'メンバー2' }));
@@ -212,15 +227,8 @@ describe('FormationEditorDialog', () => {
   });
 
   describe('メンバー削除', () => {
-    function formationJsonWithOneMember() {
-      return JSON.stringify({
-        version: 1,
-        members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
-      });
-    }
-
     it('どのメンバーも選択していないとき、削除操作は実行できない', () => {
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       expect(screen.getByRole('button', { name: '削除' })).toBeDisabled();
     });
@@ -228,7 +236,7 @@ describe('FormationEditorDialog', () => {
     it('確認ダイアログで承認すると、選択中のメンバーが削除される', async () => {
       vi.spyOn(window, 'confirm').mockReturnValue(true);
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       await user.click(screen.getByRole('button', { name: '削除' }));
@@ -239,7 +247,7 @@ describe('FormationEditorDialog', () => {
     it('確認ダイアログでキャンセルすると、メンバーは削除されない', async () => {
       vi.spyOn(window, 'confirm').mockReturnValue(false);
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       await user.click(screen.getByRole('button', { name: '削除' }));
@@ -249,16 +257,9 @@ describe('FormationEditorDialog', () => {
   });
 
   describe('メンバー名編集', () => {
-    function formationJsonWithOneMember() {
-      return JSON.stringify({
-        version: 1,
-        members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
-      });
-    }
-
     it('メンバーを選択して名前を入力・確定すると、名前表示が新しい名前になる', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       const input = screen.getByLabelText('メンバー名');
@@ -271,7 +272,7 @@ describe('FormationEditorDialog', () => {
 
     it('名前を空文字で確定すると、名前は変更されず元のままになる', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       const input = screen.getByLabelText('メンバー名');
@@ -282,16 +283,9 @@ describe('FormationEditorDialog', () => {
     });
   });
 
-  describe('立ち位置変更（数値入力）', () => {
-    function formationJsonWithOneMember() {
-      return JSON.stringify({
-        version: 1,
-        members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
-      });
-    }
-
+  describe('立ち位置変更(数値入力)', () => {
     it('メンバーが未選択のとき、座標の数値入力欄は無効化される', () => {
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       expect(screen.getByLabelText('左右')).toBeDisabled();
       expect(screen.getByLabelText('前後')).toBeDisabled();
@@ -299,7 +293,7 @@ describe('FormationEditorDialog', () => {
 
     it('メンバーを選択すると、数値入力欄にそのメンバーの現在の座標が表示される', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
 
@@ -309,7 +303,7 @@ describe('FormationEditorDialog', () => {
 
     it('数値入力欄に値を入力して確定すると、2Dエディター内の座標が変わる', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       const input = screen.getByLabelText('左右');
@@ -320,9 +314,9 @@ describe('FormationEditorDialog', () => {
       expect(screen.getByLabelText('左右')).toHaveValue('3');
     });
 
-    it('数値入力欄に不正な値（空文字）を入力して確定すると、座標は変更されず元の値のままになる', async () => {
+    it('数値入力欄に不正な値(空文字)を入力して確定すると、座標は変更されず元の値のままになる', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       const input = screen.getByLabelText('左右');
@@ -334,7 +328,7 @@ describe('FormationEditorDialog', () => {
 
     it('数値入力欄の増加ボタンをクリックすると、クリックのたびに座標が反映される', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       await user.click(screen.getByRole('button', { name: '上手へ' }));
@@ -344,22 +338,15 @@ describe('FormationEditorDialog', () => {
   });
 
   describe('メンバーカラー編集', () => {
-    function formationJsonWithOneMember() {
-      return JSON.stringify({
-        version: 1,
-        members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#4a7dff', height: 160 }],
-      });
-    }
-
     it('メンバーが未選択のとき、カラー欄は無効化される', () => {
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       expect(screen.getByLabelText('カラー')).toBeDisabled();
     });
 
     it('メンバーを選択すると、カラー欄にそのメンバーの現在のカラーが表示される', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
 
@@ -368,7 +355,7 @@ describe('FormationEditorDialog', () => {
 
     it('カラー欄でカラーを変更すると、2Dエディター内の円の色が変わる', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       fireEvent.change(screen.getByLabelText('カラー'), { target: { value: '#ff0000' } });
@@ -378,22 +365,15 @@ describe('FormationEditorDialog', () => {
   });
 
   describe('メンバー身長編集', () => {
-    function formationJsonWithOneMember() {
-      return JSON.stringify({
-        version: 1,
-        members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#4a7dff', height: 160 }],
-      });
-    }
-
     it('メンバーが未選択のとき、身長入力欄は無効化される', () => {
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       expect(screen.getByLabelText('身長(cm)')).toBeDisabled();
     });
 
     it('メンバーを選択すると、身長入力欄にそのメンバーの現在の身長が表示される', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
 
@@ -402,7 +382,7 @@ describe('FormationEditorDialog', () => {
 
     it('身長入力欄に値を入力して確定すると、身長が変わる', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       const input = screen.getByLabelText('身長(cm)');
@@ -415,7 +395,7 @@ describe('FormationEditorDialog', () => {
 
     it('身長入力欄に200cmを超える値を入力して確定すると、200cmに丸められる', async () => {
       const user = userEvent.setup();
-      renderDialog(formationJsonWithOneMember());
+      renderDialog(showJsonWithOneMember());
 
       await user.click(screen.getByTestId('member-id-1'));
       const input = screen.getByLabelText('身長(cm)');

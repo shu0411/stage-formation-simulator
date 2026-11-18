@@ -2,12 +2,12 @@ import Grid from '@mui/material/Grid';
 import { NumberField } from './NumberField';
 import { frontBackSpinnerLabels } from './frontBackSpinnerLabels';
 import { Y_AXIS_SCALE } from '../../domain/stageConstants';
-import type { Member } from '../../domain/types';
+import type { PlacedMember } from '../../domain/types';
 import type { GridSize } from '@mui/material/Grid';
 import type { ResponsiveStyleValue } from '@mui/system';
 
 type MemberPositionInputProps = {
-  member: Member | null;
+  member: PlacedMember | null;
   onSubmit: (x: number, y: number) => void;
   /** 入力フィールドのグリッドセル幅（呼び出し側の他の入力欄と揃える。design.md 2.1）。 */
   gridSize: ResponsiveStyleValue<GridSize>;

@@ -3,9 +3,9 @@ import Button from '@mui/material/Button';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import SaveIcon from '@mui/icons-material/Save';
-import { exportFormation } from '../../application/exportFormation';
-import { importFormation } from '../../application/importFormation';
-import { saveFormation } from '../../application/saveFormation';
+import { exportShow } from '../../application/exportShow';
+import { importShow } from '../../application/importShow';
+import { saveShow } from '../../application/saveShow';
 import type { FormationFileIO, FormationStorage } from '../../application/ports';
 import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
@@ -33,13 +33,13 @@ export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
   useUnsavedChangesWarning(state.isDirty);
 
   const handleSave = () => {
-    saveFormation(state.formation, storage);
+    saveShow(state.show, storage);
     dispatch({ type: 'MARK_SAVED' });
     window.alert(SAVE_COMPLETE_MESSAGE);
   };
 
   const handleExport = () => {
-    exportFormation(state.formation, fileIO);
+    exportShow(state.show, fileIO);
   };
 
   const handleImportChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -48,12 +48,12 @@ export function OperationsBar({ storage, fileIO }: OperationsBarProps) {
     if (file === null) {
       return;
     }
-    const formation = await importFormation(file, fileIO);
-    if (formation === null) {
+    const show = await importShow(file, fileIO);
+    if (show === null) {
       window.alert(IMPORT_ERROR_MESSAGE);
       return;
     }
-    dispatch({ type: 'REPLACE_FORMATION', formation });
+    dispatch({ type: 'REPLACE_SHOW', show });
   };
 
   const handleSelectCameraPreset = (presetId: CameraPresetId) => {

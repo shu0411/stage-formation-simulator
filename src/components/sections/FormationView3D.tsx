@@ -6,6 +6,7 @@ import { PersonModel } from '../parts/PersonModel';
 import { StageDirectionLabels } from '../parts/StageDirectionLabels';
 import { StageFloor3D } from '../parts/StageFloor3D';
 import { useAppState } from '../../state/useAppState';
+import { getPlacedMembers } from '../../domain/show';
 import { CAMERA_LOOK_AT, toCameraScenePosition } from '../../domain/cameraPresets';
 import type { CameraPresetId } from '../../domain/cameraPresets';
 
@@ -42,6 +43,7 @@ function PresetCamera({ presetId }: PresetCameraProps) {
 /** 3D ビュー（1.4 画面構成、1.5 3D プレビュー）。フォーメーションの現在の状態を常に表示する。 */
 export function FormationView3D() {
   const state = useAppState();
+  const members = getPlacedMembers(state.show, state.selectedFormationId);
 
   return (
     <Canvas camera={{ fov: CAMERA_FOV }} shadows>
@@ -50,7 +52,7 @@ export function FormationView3D() {
       <directionalLight position={[5, 10, 5]} intensity={0.8} castShadow />
       <StageFloor3D />
       <StageDirectionLabels />
-      {state.formation.members.map((member) => (
+      {members.map((member) => (
         <PersonModel key={member.id} member={member} />
       ))}
     </Canvas>

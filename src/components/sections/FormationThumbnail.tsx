@@ -1,4 +1,5 @@
 import { FormationStageSvg } from '../parts/FormationStageSvg';
+import { getPlacedMembers } from '../../domain/show';
 import { useAppDispatch, useAppState } from '../../state/useAppState';
 import './FormationThumbnail.css';
 
@@ -9,6 +10,7 @@ import './FormationThumbnail.css';
 export function FormationThumbnail() {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const members = getPlacedMembers(state.show, state.selectedFormationId);
 
   return (
     <button
@@ -17,7 +19,7 @@ export function FormationThumbnail() {
       onClick={() => dispatch({ type: 'OPEN_EDITOR' })}
       aria-label="2D編集ポップアップを開く"
     >
-      <FormationStageSvg formation={state.formation} className="formation-thumbnail__svg" />
+      <FormationStageSvg members={members} className="formation-thumbnail__svg" />
     </button>
   );
 }

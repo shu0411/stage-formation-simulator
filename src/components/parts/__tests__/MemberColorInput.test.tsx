@@ -8,8 +8,6 @@ describe('MemberColorInput', () => {
   const member: Member = {
     id: 'id-1',
     name: 'メンバー1',
-    x: 0,
-    y: 0,
     color: '#ff0000',
     height: 160,
   };
