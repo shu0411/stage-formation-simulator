@@ -14,15 +14,21 @@ function TestConsumer() {
   const dispatch = useAppDispatch();
   return (
     <div>
-      <p data-testid="member-count">{state.formation.members.length}</p>
+      <p data-testid="member-count">{state.show.members.length}</p>
+      <p data-testid="formation-count">{state.show.formations.length}</p>
       <p data-testid="is-dirty">{String(state.isDirty)}</p>
       <button
         onClick={() =>
           dispatch({
-            type: 'REPLACE_FORMATION',
-            formation: {
-              members: [
-                { id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 },
+            type: 'REPLACE_SHOW',
+            show: {
+              members: [{ id: 'id-1', name: 'メンバー1', color: '#ff0000', height: 160 }],
+              formations: [
+                {
+                  id: 'f-1',
+                  name: 'フォーメーション1',
+                  positions: { 'id-1': { x: 0, y: 0 } },
+                },
               ],
             },
           })
@@ -37,8 +43,9 @@ function TestConsumer() {
 describe('AppStateProvider', () => {
   it('保存データがあれば起動時に復元し、isDirtyはfalseのままにする（1.5 保存・復元）', () => {
     const json = JSON.stringify({
-      version: 1,
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+      version: 2,
+      members: [{ id: 'id-1', name: 'メンバー1', color: '#ff0000', height: 160 }],
+      formations: [{ id: 'f-1', name: 'フォーメーション1', positions: { 'id-1': { x: 0, y: 0 } } }],
     });
 
     render(
@@ -51,7 +58,7 @@ describe('AppStateProvider', () => {
     expect(screen.getByTestId('is-dirty').textContent).toBe('false');
   });
 
-  it('保存データがない場合はメンバー0人の空のステージで開始する（1.5 空状態）', () => {
+  it('保存データがない場合はメンバー0人・フォーメーション1つの空のステージで開始する（1.5 空状態）', () => {
     render(
       <AppStateProvider storage={createStorage(null)}>
         <TestConsumer />
@@ -59,11 +66,27 @@ describe('AppStateProvider', () => {
     );
 
     expect(screen.getByTestId('member-count').textContent).toBe('0');
+    expect(screen.getByTestId('formation-count').textContent).toBe('1');
   });
 
   it('保存データが破損している場合も空のステージで開始する（2.4 破損データ）', () => {
     render(
       <AppStateProvider storage={createStorage('not json')}>
+        <TestConsumer />
+      </AppStateProvider>,
+    );
+
+    expect(screen.getByTestId('member-count').textContent).toBe('0');
+  });
+
+  it('version 1の保存データが残っている場合も破損データとして扱い、空のステージで開始する', () => {
+    const json = JSON.stringify({
+      version: 1,
+      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0, color: '#ff0000', height: 160 }],
+    });
+
+    render(
+      <AppStateProvider storage={createStorage(json)}>
         <TestConsumer />
       </AppStateProvider>,
     );

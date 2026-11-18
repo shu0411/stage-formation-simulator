@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MemberPositionInput } from '../MemberPositionInput';
-import type { Member } from '../../../domain/types';
+import type { PlacedMember } from '../../../domain/types';
 
 describe('MemberPositionInput', () => {
-  const member: Member = {
+  const member: PlacedMember = {
     id: 'id-1',
     name: 'メンバー1',
     x: 1,
@@ -77,7 +77,7 @@ describe('MemberPositionInput', () => {
       <MemberPositionInput member={member} onSubmit={vi.fn()} gridSize={12} />,
     );
 
-    const snapped: Member = { ...member, x: 3.25 };
+    const snapped: PlacedMember = { ...member, x: 3.25 };
     rerender(<MemberPositionInput member={snapped} onSubmit={vi.fn()} gridSize={12} />);
 
     expect(screen.getByLabelText('左右')).toHaveValue('3.25');

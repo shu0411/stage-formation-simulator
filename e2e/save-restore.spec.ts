@@ -9,6 +9,26 @@ test.describe('保存・復元', () => {
     await expect(page.locator('.person-model__label')).toHaveCount(0);
   });
 
+  test('LocalStorageにversion 1のデータが残っている場合は破損データとして扱い、空のステージが表示される', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.evaluate(() => {
+      localStorage.setItem(
+        'stage-formation-simulator:formation',
+        JSON.stringify({
+          version: 1,
+          members: [
+            { id: 'legacy-1', name: '旧メンバー', x: 0, y: 0, color: '#ff0000', height: 170 },
+          ],
+        }),
+      );
+    });
+    await page.reload();
+
+    await expect(page.locator('.person-model__label')).toHaveCount(0);
+  });
+
   test('フォーメーションを編集して保存ボタンを押した後にページを再読み込みすると、保存した状態が復元される', async ({
     page,
   }) => {

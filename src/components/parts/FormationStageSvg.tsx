@@ -18,11 +18,11 @@ import {
   X_AXIS_SCALE,
   Y_AXIS_SCALE,
 } from '../../domain/stageConstants';
-import type { Formation } from '../../domain/types';
+import type { PlacedMember } from '../../domain/types';
 import './FormationStageSvg.css';
 
 type FormationStageSvgProps = {
-  formation: Formation;
+  members: PlacedMember[];
   selectedMemberId?: string | null;
   /** true の場合、メンバーの選択・ドラッグ操作を受け付ける（1.6 メンバーの選択、1.5 立ち位置変更）。 */
   interactive?: boolean;
@@ -115,7 +115,7 @@ function DirectionLabel({
  * viewBox はグリッド番号表示用の余白を含み、ステージ本体（STAGE_RECT）はその内側に描画する。
  */
 export function FormationStageSvg({
-  formation,
+  members,
   selectedMemberId = null,
   interactive = false,
   dragStep = DEFAULT_DRAG_STEP,
@@ -215,7 +215,7 @@ export function FormationStageSvg({
         text="客席側"
         orientation="horizontal"
       />
-      {formation.members.map((member) => {
+      {members.map((member) => {
         const point = toSvgPoint(member.x, member.y);
         const selected = member.id === selectedMemberId;
         return (

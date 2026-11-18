@@ -1,10 +1,10 @@
 import { Html } from '@react-three/drei';
 import { toScenePosition } from '../../domain/sceneMapping';
-import type { Member } from '../../domain/types';
+import type { PlacedMember } from '../../domain/types';
 import './PersonModel.css';
 
 type PersonModelProps = {
-  member: Member;
+  member: PlacedMember;
 };
 
 const BODY_RADIUS = 0.25;

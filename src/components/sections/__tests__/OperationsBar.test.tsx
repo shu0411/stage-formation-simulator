@@ -41,7 +41,7 @@ function memberCountText() {
 
 function MemberCountProbe() {
   const state = useAppState();
-  return <p data-testid="member-count">{state.formation.members.length}</p>;
+  return <p data-testid="member-count">{state.show.members.length}</p>;
 }
 
 function CameraPresetProbe() {
@@ -55,7 +55,7 @@ describe('OperationsBar', () => {
     vi.unstubAllGlobals();
   });
 
-  it('幅900px未満では、保存・エクスポート・インポート・カメラの各ボタンにアイコンが表示される（仕様: モバイル表示の操作バー全体）', () => {
+  it('幅900px未満では、保存・エクスポート・インポート・カメラの各ボタンにアイコンが表示される(仕様: モバイル表示の操作バー全体)', () => {
     mockMatchMedia(true);
     render(
       <AppStateProvider storage={noopStorage()}>
@@ -69,12 +69,17 @@ describe('OperationsBar', () => {
     }
   });
 
-  it('保存ボタンを押すとstorageへ保存しisDirtyをfalseにする（1.5 保存・復元）', async () => {
+  it('保存ボタンを押すとstorageへ保存しisDirtyをfalseにする(1.5 保存・復元)', async () => {
     const storage = noopStorage();
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     const user = userEvent.setup();
+    const savedJson = JSON.stringify({
+      version: 2,
+      members: [],
+      formations: [{ id: 'f-1', name: 'フォーメーション1', positions: {} }],
+    });
     render(
-      <AppStateProvider storage={noopStorage(JSON.stringify({ version: 1, members: [] }))}>
+      <AppStateProvider storage={noopStorage(savedJson)}>
         <OperationsBar storage={storage} fileIO={fakeFileIO()} />
         <IsDirtyProbe />
       </AppStateProvider>,
@@ -82,12 +87,12 @@ describe('OperationsBar', () => {
 
     await user.click(screen.getByRole('button', { name: '保存' }));
 
-    expect(storage.save).toHaveBeenCalledWith(JSON.stringify({ version: 1, members: [] }));
+    expect(storage.save).toHaveBeenCalledWith(savedJson);
     expect(screen.getByTestId('is-dirty').textContent).toBe('false');
     expect(alertSpy).toHaveBeenCalledWith('保存しました。');
   });
 
-  it('エクスポートボタンを押すとダウンロードさせる（1.5 JSONエクスポート）', async () => {
+  it('エクスポートボタンを押すとダウンロードさせる(1.5 JSONエクスポート)', async () => {
     const fileIO = fakeFileIO();
     const user = userEvent.setup();
     render(
@@ -98,16 +103,18 @@ describe('OperationsBar', () => {
 
     await user.click(screen.getByRole('button', { name: 'エクスポート' }));
 
-    expect(fileIO.download).toHaveBeenCalledWith(
-      JSON.stringify({ version: 1, members: [] }),
-      'formation.json',
-    );
+    expect(fileIO.download).toHaveBeenCalled();
+    const [json, filename] = (fileIO.download as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(filename).toBe('formation.json');
+    expect(JSON.parse(json).version).toBe(2);
+    expect(JSON.parse(json).members).toEqual([]);
   });
 
-  it('正しい形式のファイルを選択するとフォーメーションが置き換わる（1.5 JSONインポート）', async () => {
+  it('正しい形式のファイルを選択すると演目が置き換わる(1.5 JSONインポート)', async () => {
     const json = JSON.stringify({
-      version: 1,
-      members: [{ id: 'id-1', name: 'メンバー1', x: 0, y: 0 }],
+      version: 2,
+      members: [{ id: 'id-1', name: 'メンバー1', color: '#4a7dff', height: 160 }],
+      formations: [{ id: 'f-1', name: 'フォーメーション1', positions: { 'id-1': { x: 0, y: 0 } } }],
     });
     const fileIO = fakeFileIO({ read: vi.fn().mockResolvedValue(json) });
     const user = userEvent.setup();
@@ -124,7 +131,7 @@ describe('OperationsBar', () => {
     expect(memberCountText()).toBe('1');
   });
 
-  it('不正な形式のファイルを選択するとエラーダイアログが表示され、フォーメーションは変更されない（2.4 インポート失敗）', async () => {
+  it('不正な形式のファイルを選択するとエラーダイアログが表示され、演目は変更されない(2.4 インポート失敗)', async () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     const fileIO = fakeFileIO({ read: vi.fn().mockResolvedValue('not json') });
     const user = userEvent.setup();
@@ -144,7 +151,7 @@ describe('OperationsBar', () => {
     expect(memberCountText()).toBe('0');
   });
 
-  it('カメラ位置を切り替えるとcameraPresetIdが変わりisDirtyはfalseのままになる（仕様: カメラ位置の切り替え）', async () => {
+  it('カメラ位置を切り替えるとcameraPresetIdが変わりisDirtyはfalseのままになる(仕様: カメラ位置の切り替え)', async () => {
     const user = userEvent.setup();
     render(
       <AppStateProvider storage={noopStorage()}>

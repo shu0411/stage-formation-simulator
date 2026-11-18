@@ -508,12 +508,12 @@ JSON エクスポート / インポート（1.5）
   編集ポップアップのプルダウンでメンバーを選ぶと選択状態になる。選択中の
   メンバーは視覚的に区別される。削除・名前編集は選択中のメンバーが対象となる
 - **メンバー数**: 上限は設けない
-- **フォーメーションデータ**: メンバーの一覧であり、各メンバーは名前・立ち位置
-  （座標）・カラー・身長を持つ。JSON エクスポート・インポート・LocalStorage
-  保存の対象はすべてこのデータである（具体的なスキーマは技術設計で定める）
-- **保存データの後方互換性**: カラー・身長を持たない旧形式のフォーメーション
-  データ（JSON インポート・LocalStorage からの復元）を読み込む場合、それぞれ
-  デフォルト値（青・160cm）で補う
+- **演目データ**: 演目は、全フォーメーションで共通のメンバー一覧（名前・カラー・
+  身長を持つ）と、1 つ以上のフォーメーションの配列からなる。各フォーメーションは
+  名前と、メンバーごとの立ち位置（座標）を持つ。JSON エクスポート・インポート・
+  LocalStorage 保存の対象はすべてこの演目データである（具体的なスキーマは技術
+  設計で定める）。MVP ではフォーメーションは常に 1 つのままとし、作成・選択・
+  削除の UI は将来追加する（#8）
 - **対応環境**: PC ブラウザを主対象とし、タブレット・スマートフォンでも表示が
   崩れないレスポンシブなレイアウトとする。タッチ操作への最適化は対象外（1.1）。
   スマートフォンの縦表示・横表示では、2D 編集ポップアップを次の条件で判定した
@@ -700,30 +700,43 @@ src/
 
 ### 2.2 データ・状態設計
 
-**ドメイン型**（1.6 のフォーメーションデータに対応）:
+**ドメイン型**（1.6 の演目データに対応。親 Issue #8 複数フォーメーション管理の
+1 つ目の子 Issue #49 で、メンバーの一覧だったデータモデルを「演目 = 共通の
+メンバー + フォーメーションの配列」へ変更した）:
 
 ```ts
-type Member = {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  color: string;
-  height: number;
-};
-type Formation = { members: Member[] };
+/** メンバー固有の属性（フォーメーションによらず不変）。 */
+type Member = { id: string; name: string; color: string; height: number };
+/** 立ち位置（1.6 座標系の値）。 */
+type Position = { x: number; y: number };
+/** 1 つのフォーメーション。positions はメンバー ID → 立ち位置。 */
+type Formation = { id: string; name: string; positions: Record<string, Position> };
+/** 演目。全フォーメーションで共通のメンバーと、並び順どおりのフォーメーション。 */
+type Show = { members: Member[]; formations: Formation[] };
+/** 描画・入力欄用に、メンバーと特定フォーメーションの立ち位置を結合したもの。 */
+type PlacedMember = Member & Position;
 ```
 
-- `id` は `crypto.randomUUID()` で生成。名前変更・削除の対象特定に使う
-- `x`, `y` は 1.6 の座標系の値そのもの（バミリ番号。メートルではない）。
+- 不変条件: `formations` は常に 1 つ以上。すべてのフォーメーションの
+  `positions` は `members` の全 ID をキーに持ち、それ以外のキーを持たない
+- `Member.id`・`Formation.id` はいずれも `crypto.randomUUID()` で呼び出し側が
+  採番する。`Member.id` は名前変更・削除・立ち位置更新の対象特定に使う
+- `Position.x`, `y` は 1.6 の座標系の値そのもの（バミリ番号。メートルではない）。
   基準値・1 単位あたりのメートル・増減の向きは 1.6 の定義に従う
 - 実距離（メートル）への変換は 2.1「座標軸の値とメートルの変換」の関数を
   経由する
-- メンバー追加時の初期位置（1.5 メンバー追加）は原点（x=0, y=0）とする
+- `domain/show.ts` の `createInitialShow(formationId)` が、保存データがない
+  状態での初期演目（メンバー 0 人・フォーメーション 1 つ、名前は
+  `DEFAULT_FORMATION_NAME_PREFIX`（`'フォーメーション'`）+ `1`）を作る。
+  `getPlacedMembers(show, formationId)` が、`members` の順に指定した
+  フォーメーションの立ち位置と結合した `PlacedMember[]` を返す（描画・
+  入力欄はこれを経由して参照する）
+- メンバー追加時の初期位置（1.5 メンバー追加）は、全フォーメーションの
+  `positions` に追加する原点（x=0, y=0）とする
 - `color` はメンバーカラー編集（1.5）で選択する 16 進カラーコード文字列
   （例: `"#4a7dff"`）。`mui-color-input` は常に妥当な形式の値を返すため、
   アプリ内の入力時点での形式バリデーションは行わない（2.1 カラー選択欄。
-  JSON インポート時の型検査は 1.6 保存データの後方互換性のとおり別途行う）
+  JSON インポート時は必須の型検査を行う。2.4）
 - `height` はメンバー身長編集（1.5）の身長（cm）。100〜200 の範囲にクランプ
   する。このクランプは `moveMember` の `snapPositionWithinStage`（1.6 立ち位置の
   範囲）と同じ位置づけの `domain` 関数（`clampMemberHeight`）として実装し、
@@ -754,29 +767,43 @@ type Formation = { members: Member[] };
 
 ```json
 {
-  "version": 1,
-  "members": [
-    { "id": "...", "name": "...", "x": 0, "y": 0, "color": "#4a7dff", "height": 160 }
+  "version": 2,
+  "members": [{ "id": "m1", "name": "メンバー1", "color": "#4a7dff", "height": 160 }],
+  "formations": [
+    { "id": "f1", "name": "フォーメーション1", "positions": { "m1": { "x": 0, "y": 0 } } }
   ]
 }
 ```
 
-- `version` は将来のフォーマット変更に備えた識別のみ（変換処理は作らない）。
-  `color`・`height` の追加はスキーマの拡張のみのため `version` は変更しない
-- LocalStorage のキーは `stage-formation-simulator:formation` の 1 つ
-- **後方互換性**（1.6 保存データの後方互換性）: `parseFormationJson` の
-  バリデーションで、`color`・`height` は存在しなくてもエラーにしない
-  （存在する場合は型のみ検査する。`id`/`name`/`x`/`y` は従来どおり必須）。
-  値の補完（`DEFAULT_MEMBER_COLOR`・`DEFAULT_MEMBER_HEIGHT_CM`。`height` は
-  `clampMemberHeight` も適用）は、既存の座標のクランプ処理と同じ変換ステップで行う
+- `version` は将来のフォーマット変更に備えた識別。演目データモデルへの
+  変更（#49）でスキーマが非互換になったため `1` から `2` に変更した
+- LocalStorage のキーは `stage-formation-simulator:formation`、エクスポートの
+  ファイル名は `formation.json` のまま変更しない
+- **後方互換性はない**: `version` は `2` でなければならず、`version: 1` の
+  JSON はインポートできない（不正な形式としてエラーダイアログを表示する。
+  2.4）。LocalStorage に `version: 1` のデータが残っている場合も破損データ
+  として扱い、空のステージ（`createInitialShow`）で開始する
+- `parseShowJson` のバリデーション（いずれか 1 つでも満たさなければ `null`）:
+  `version === 2`、`members` が配列で各要素の `id`/`name`/`color` が文字列・
+  `height` が数値（`color`・`height` の欠落・型不正はいずれもエラー。旧形式の
+  ような欠落時のデフォルト値補完は行わない）、`formations` が 1 つ以上の
+  要素を持つ配列で各要素の `id`/`name` が文字列・`positions` がオブジェクト、
+  かつ各フォーメーションの `positions` に全メンバーの `id` について
+  `x`/`y` が数値の立ち位置があること
+- 変換: 立ち位置は `snapPositionWithinStage`、身長は `clampMemberHeight` を
+  通す（従来どおり）。`positions` 内の、どのメンバーにも対応しないキーは捨てる
 
 **アプリ状態**（`state/` の useReducer + Context で一元管理。サムネイル・
 3D ビューが購読する「確定済み」の状態）:
 
-- `formation: Formation` — 現在の（確定済みの）フォーメーション
+- `show: Show` — 現在の（確定済みの）演目
+- `selectedFormationId: string` — 表示・編集対象のフォーメーション ID。
+  `createInitialAppState(show)` は `show.formations[0].id` を選択する。
+  現時点ではこれを変える操作はなく、常に先頭のフォーメーションを指す
+  （フォーメーションの作成・選択・切り替え UI は #8 の後続の子 Issue で扱う）
 - `isEditorOpen: boolean` — 2D 編集ポップアップの開閉
 - `isDirty: boolean` — 未保存の変更の有無（保存・復元・起動直後は false、
-  フォーメーションへの変更で true）
+  演目への変更で true）
 - `cameraPresetId: CameraPresetId` — 選択中のカメラ位置プリセット（1.5 カメラ位置
   切り替え。`domain/cameraPresets.ts`）。初期値は `DEFAULT_CAMERA_PRESET_ID`
   （`'center'`）。`SELECT_CAMERA_PRESET` action でのみ更新し、`isDirty` には
@@ -789,8 +816,10 @@ type Formation = { members: Member[] };
 **2D 編集ポップアップのローカル状態**（`FormationEditorDialog` 内の
 `useState`。1.6 編集セッションと確定・破棄）:
 
-- 下書きのフォーメーション（ポップアップを開いた時点のアプリ状態の
-  `formation` をコピーして開始する）
+- 下書きの演目（ポップアップを開いた時点のアプリ状態の `show` をコピーして
+  開始する）
+- 編集対象のフォーメーション ID（ポップアップを開いた時点の
+  `selectedFormationId` に固定し、ポップアップ内では切り替えない）
 - 選択中メンバー ID（ポップアップを開くたびに未選択から始まる）
 - 下書きに変更があるかどうか（キャンセル操作・ダイアログ外クリック・
   Escape キーでの確認要否の判定に使う。2.4）
@@ -811,17 +840,25 @@ reducer が新しい状態を生成
   外側でローカルな下書き state を持つ（2.2）。追加・削除・移動・名前変更・
   カラー変更・身長変更は `domain` の `addMember` / `removeMember` /
   `moveMember` / `renameMember` / `changeMemberColor` / `changeMemberHeight` を
-  下書きに対して直接呼び出し、グローバル状態へは dispatch しない。
-  ポップアップ内の俯瞰図・数値入力欄はこの下書きを描画するため、編集は
-  ポップアップ自身にのみ即座に反映される（1.6）。`changeMemberHeight` は
+  下書きの `Show` に対して直接呼び出し、グローバル状態へは dispatch しない。
+  `moveMember` は編集対象のフォーメーション ID（ポップアップを開いた時点の
+  `selectedFormationId` に固定したもの）を指定して呼び、そのフォーメーション
+  だけの立ち位置を更新する。`addMember`・`removeMember` は全フォーメーションの
+  `positions` に対して処理する（2.2）。ポップアップ内の俯瞰図・数値入力欄は
+  `getPlacedMembers(下書き, 編集対象のフォーメーションID)` の結果を描画するため、
+  編集はポップアップ自身にのみ即座に反映される（1.6）。`changeMemberHeight` は
   内部で `clampMemberHeight`（100〜200 の範囲にクランプ。2.2）を適用する
-- 確定操作でのみ、下書きの内容を `REPLACE_FORMATION` action で dispatch し
+- 確定操作でのみ、下書きの内容を `REPLACE_SHOW` action で dispatch し
   グローバル状態（サムネイル・3D ビューが購読する状態）を置き換えたうえで
-  `CLOSE_EDITOR` を dispatch する。キャンセル操作・ダイアログ外クリック・
-  Escape キーのいずれで閉じる場合も、下書きに変更がある場合は
-  `window.confirm` で確認する（2.4）。確認（不要な場合はそのまま）ののち
-  `CLOSE_EDITOR` のみを dispatch し、下書きはポップアップのアンマウントと
-  ともに破棄する
+  `CLOSE_EDITOR` を dispatch する。`REPLACE_SHOW` の reducer は `isDirty` を
+  true にし、`selectedFormationId` は新しい `show` に同じ ID のフォーメーションが
+  あれば維持し、なければ先頭のフォーメーションにフォールバックする（JSON
+  インポートで異なるフォーメーション構成に置き換わった場合の保険。MVP では
+  確定時の `show` は同じ `selectedFormationId` を持つため実際には維持される）。
+  キャンセル操作・ダイアログ外クリック・Escape キーのいずれで閉じる場合も、
+  下書きに変更がある場合は `window.confirm` で確認する（2.4）。確認
+  （不要な場合はそのまま）ののち `CLOSE_EDITOR` のみを dispatch し、下書きは
+  ポップアップのアンマウントとともに破棄する
 - ドラッグ座標は `useMemberDrag`（`hooks`）が SVG のピクセル座標からメートルへ
   変換し、`pointermove` のたびに `event.shiftKey` から単位（選択中の `dragStep`、
   Shift 押下中は `LARGE_DRAG_STEP` = `1`）を決めて `domain` の
@@ -860,17 +897,19 @@ reducer が新しい状態を生成
   始まったタッチに限り `preventDefault` してスクロールの開始自体を防ぐ。それ以外の
   要素で始まったタッチは抑止しないため、円以外の俯瞰図の領域からの画面スクロールは
   維持される。`.member` の `touch-action: none` は対応ブラウザ向けに併用する
-- インポート・復元時も同じ `snapPositionWithinStage` を通す（1.6 立ち位置の範囲）。
-  こちらは下書きを介さず、グローバル状態へ直接 `REPLACE_FORMATION` する
-- インポート・復元時、`color`・`height` が存在しない場合はデフォルト値
-  （`DEFAULT_MEMBER_COLOR`・`DEFAULT_MEMBER_HEIGHT_CM`）で補い、`height` は
-  存在する場合も含めて `clampMemberHeight` を通す（1.6 保存データの後方互換性・
-  2.2）。この補完・欠落の許容自体はバリデーション失敗（後述の 2.4
-  インポート失敗）とは扱わない
-- 保存・復元・インポート・エクスポートは `application` のユースケースとして
-  実装し、ports を介して `infrastructure`（LocalStorage・ファイル I/O）を呼ぶ
+- インポート・復元時も同じ `snapPositionWithinStage`・`clampMemberHeight` を
+  通す（1.6 立ち位置の範囲・2.2）。こちらは下書きを介さず、グローバル状態へ
+  直接 `REPLACE_SHOW` する
+- `version`・`color`・`height`・`formations`（1 つ以上）・各フォーメーションの
+  `positions`（全メンバー分の立ち位置）はいずれも必須で、欠落や型不正は
+  バリデーション失敗（後述の 2.4 インポート失敗）として扱う。旧形式
+  （`version: 1`）のデータの読み込みや、欠落時のデフォルト値補完は行わない
+  （2.2）
+- 保存・復元・インポート・エクスポートは `application` のユースケース
+  （`saveShow` / `restoreShow` / `importShow` / `exportShow`）として実装し、
+  ports を介して `infrastructure`（LocalStorage・ファイル I/O）を呼ぶ
 - インポート: ファイル選択 → テキスト読み込み → `domain` のバリデーション
-  （JSON パース＋スキーマ検査）→ 成功時のみフォーメーションを置換
+  （JSON パース＋スキーマ検査）→ 成功時のみ演目を置換
 - エクスポート: 現在の状態をシリアライズし、Blob としてダウンロードさせる
   （ファイル名は `formation.json`）
 - 保存: シリアライズして LocalStorage へ書き込み、`isDirty` を false にした
@@ -883,14 +922,15 @@ reducer が新しい状態を生成
 
 - **インポート失敗**（1.5 JSON インポートのエラー系）: バリデーション失敗時は
   状態を変更せず `window.alert` でエラーダイアログを表示する（MVP では独自の
-  エラー表示 UI・状態は持たない）。`color`・`height` の欠落はここでいう
-  バリデーション失敗に含めない（2.2・2.3 後方互換性）。ただし存在するのに
-  型が不正な場合（`color` が文字列でない、`height` が数値でないなど）は、
-  他のフィールドと同様にバリデーション失敗として扱う
+  エラー表示 UI・状態は持たない）。`version` が `2` でない（旧形式を含む）、
+  `color`・`height` の欠落・型不正、`formations` が空、フォーメーションの
+  `positions` に全メンバー分の立ち位置がないことは、いずれもバリデーション
+  失敗として扱う（2.2・2.3）
 - **保存完了**（1.5 保存・復元）: 保存ボタン押下でのシリアライズ・書き込み後、
   `window.alert` で保存完了ダイアログを表示する
-- **LocalStorage の破損データ**: 起動時の読み込みでバリデーションに失敗した場合は
-  保存データなしとして扱い、空のステージで開始する（1.5 保存・復元の空状態）
+- **LocalStorage の破損データ**: 起動時の読み込みでバリデーションに失敗した場合
+  （`version: 1` のデータが残っている場合を含む）は保存データなしとして扱い、
+  空のステージ（`createInitialShow`）で開始する（1.5 保存・復元の空状態）
 - **削除確認**（1.5 メンバー削除）: `window.confirm` を使う（MVP では独自
   ダイアログを作らない）
 - **編集内容の破棄確認**（1.5 2D エディター表示、1.6 編集セッションと確定・破棄）:
@@ -912,19 +952,19 @@ reducer が新しい状態を生成
 
 | 1.5 の機能 | 先に書くユニットテスト | E2E で担う受け入れ条件 |
 | --- | --- | --- |
-| 2D エディター表示 | 確定操作で下書きがグローバル状態へ反映されポップアップが閉じること、キャンセル操作・ダイアログ外クリック・Escape のいずれでも下書きに変更があれば確認のうえ破棄されること（`window.confirm` をモック）、変更なし時はいずれの操作でも確認なしで閉じること、サムネイルの追従、グリッド線とグリッド番号の生成（domain）。`useEditorLayout`: 縦表示・横表示の条件それぞれに一致したときの判定結果、両方一致時に横表示を優先すること、どちらにも一致しないときは PC 扱いになること（`matchMedia` をモック）。`FormationStageSvg`: 「上手」「下手」「客席側」の方向ラベルが 0 人時を含め常に表示されること、各ラベルが仕様通りの方向（SVG 座標上の位置）に描画されること、各ラベルが枠（矩形）で囲まれて表示されること、「上手」「下手」が縦書き・「客席側」が横書きで表示されること | サムネイル・編集ポップアップの俯瞰図の表示縦横比が viewBox と一致し上下に空白が生じないこと、編集ポップアップの俯瞰図が Card で囲まれ操作欄の Card と同じ間隔で並ぶこと。モバイル縦表示: ポップアップが全画面表示になり俯瞰図が画面横幅いっぱいに表示されること、内容をスクロールしてもキャンセル・確定ボタンが表示され続けること。モバイル横表示: 俯瞰図が全体表示され左に俯瞰図・右に操作欄が並ぶこと、入力欄が 1 列で表示されること。縦表示・横表示それぞれでの俯瞰図ドラッグの追従、端末の向き変更時に選択状態・下書きが維持されること。方向ラベルが小さいサムネイルでも視認でき、グリッド番号・メンバーと重ならないこと（目視） |
-| メンバー追加 | 0 人→原点に「メンバー1」、N 人→N+1 人と連番名（domain）、追加したメンバーが選択状態になる（`FormationEditorDialog` のコンポーネントテスト） | — |
-| メンバー削除 | 確認承認で削除・キャンセルで維持（confirm をモック）、未選択時は実行不可 | — |
-| 立ち位置変更 | ドラッグでの座標更新と追従、座標値↔メートルの変換関数（x・y 共通の仕組み）、`snapPositionWithinStage`（`step` 省略時は 0.05 単位への丸め、`step` 指定時はその倍数への丸め、範囲外は範囲内に収まるその単位の値に丸める。domain）。数値入力欄: 選択中メンバーの現在値表示・確定時の座標反映・不正値時の据え置き・未選択時の無効化・スピナー操作での即時反映（`MemberPositionInput` のコンポーネントテスト） | 俯瞰図上のドラッグで、手前端・奥端付近でもメンバーがポインター位置に追従すること |
-| 移動幅プルダウン | `dragStep`: `DRAG_STEPS`・`DEFAULT_DRAG_STEP`・`LARGE_DRAG_STEP` の値（domain）。`useMemberDrag`: 選択中の `dragStep` の倍数への吸着、Shift 押下中は `1` の倍数への吸着、開始位置からの移動距離が 6px 未満の間は `onMove` を呼ばないこと、`step` 省略時の呼び出し（`moveMember` 側）には影響しないこと。`appReducer`: 初期値が `0.25`、`SELECT_DRAG_STEP` で `dragStep` が変わり `isDirty` は変わらないこと、`REPLACE_FORMATION` で `dragStep` が維持されること。`DragStepSelector`: 「移動幅」ラベルのプルダウンに選択中の値が表示されること、選択肢がすべて表示されること、選択を変えると `onChange` が呼ばれること | 単位を選んでのドラッグでその倍数に揃うこと、Shift ドラッグで `1` の倍数に揃うこと、ポップアップを閉じて開き直しても選択が維持されること、ページを再読み込みすると `0.25` に戻ること、PC・モバイル縦表示・モバイル横表示のいずれでもプルダウンが横にはみ出さないこと（目視を含む） |
+| 2D エディター表示 | 確定操作で下書きが `REPLACE_SHOW` でグローバル状態へ反映されポップアップが閉じること、キャンセル操作・ダイアログ外クリック・Escape のいずれでも下書きに変更があれば確認のうえ破棄されること（`window.confirm` をモック）、変更なし時はいずれの操作でも確認なしで閉じること、サムネイルの追従、グリッド線とグリッド番号の生成、`createInitialShow`（メンバー0人・フォーメーション1つ）・`getPlacedMembers`（指定フォーメーションの立ち位置と結合）（domain）。`useEditorLayout`: 縦表示・横表示の条件それぞれに一致したときの判定結果、両方一致時に横表示を優先すること、どちらにも一致しないときは PC 扱いになること（`matchMedia` をモック）。`FormationStageSvg`: 「上手」「下手」「客席側」の方向ラベルが 0 人時を含め常に表示されること、各ラベルが仕様通りの方向（SVG 座標上の位置）に描画されること、各ラベルが枠（矩形）で囲まれて表示されること、「上手」「下手」が縦書き・「客席側」が横書きで表示されること | サムネイル・編集ポップアップの俯瞰図の表示縦横比が viewBox と一致し上下に空白が生じないこと、編集ポップアップの俯瞰図が Card で囲まれ操作欄の Card と同じ間隔で並ぶこと。モバイル縦表示: ポップアップが全画面表示になり俯瞰図が画面横幅いっぱいに表示されること、内容をスクロールしてもキャンセル・確定ボタンが表示され続けること。モバイル横表示: 俯瞰図が全体表示され左に俯瞰図・右に操作欄が並ぶこと、入力欄が 1 列で表示されること。縦表示・横表示それぞれでの俯瞰図ドラッグの追従、端末の向き変更時に選択状態・下書きが維持されること。方向ラベルが小さいサムネイルでも視認でき、グリッド番号・メンバーと重ならないこと（目視） |
+| メンバー追加 | 0 人→原点に「メンバー1」、N 人→N+1 人と連番名、全フォーメーションの `positions` に原点の立ち位置が追加されること（フォーメーションが 2 つある `Show` で検証。domain）、追加したメンバーが選択状態になる（`FormationEditorDialog` のコンポーネントテスト） | — |
+| メンバー削除 | `members` と全フォーメーションの `positions` から削除されること（フォーメーションが 2 つある `Show` で検証。domain）、確認承認で削除・キャンセルで維持（confirm をモック）、未選択時は実行不可 | — |
+| 立ち位置変更 | ドラッグでの座標更新と追従、座標値↔メートルの変換関数（x・y 共通の仕組み）、`snapPositionWithinStage`（`step` 省略時は 0.05 単位への丸め、`step` 指定時はその倍数への丸め、範囲外は範囲内に収まるその単位の値に丸める。domain）、`moveMember` が指定したフォーメーションだけの立ち位置を変えること（フォーメーションが 2 つある `Show` で検証。domain）。数値入力欄: 選択中メンバーの現在値表示・確定時の座標反映・不正値時の据え置き・未選択時の無効化・スピナー操作での即時反映（`MemberPositionInput` のコンポーネントテスト） | 俯瞰図上のドラッグで、手前端・奥端付近でもメンバーがポインター位置に追従すること |
+| 移動幅プルダウン | `dragStep`: `DRAG_STEPS`・`DEFAULT_DRAG_STEP`・`LARGE_DRAG_STEP` の値（domain）。`useMemberDrag`: 選択中の `dragStep` の倍数への吸着、Shift 押下中は `1` の倍数への吸着、開始位置からの移動距離が 6px 未満の間は `onMove` を呼ばないこと、`step` 省略時の呼び出し（`moveMember` 側）には影響しないこと。`appReducer`: 初期値が `0.25`、`SELECT_DRAG_STEP` で `dragStep` が変わり `isDirty` は変わらないこと、`REPLACE_SHOW` で `dragStep` が維持されること。`DragStepSelector`: 「移動幅」ラベルのプルダウンに選択中の値が表示されること、選択肢がすべて表示されること、選択を変えると `onChange` が呼ばれること | 単位を選んでのドラッグでその倍数に揃うこと、Shift ドラッグで `1` の倍数に揃うこと、ポップアップを閉じて開き直しても選択が維持されること、ページを再読み込みすると `0.25` に戻ること、PC・モバイル縦表示・モバイル横表示のいずれでもプルダウンが横にはみ出さないこと（目視を含む） |
 | メンバー名編集 | 名前の反映、空文字で元に戻る（domain） | — |
 | メンバーカラー編集 | 追加時の初期カラー、`changeMemberColor` によるカラー反映（domain）。`FormationStageSvg` の円が `member.color` で塗られること（コンポーネントテスト）。カラー選択欄: 現在値表示・変更時の即時反映・未選択時の無効化（`MemberColorInput` のコンポーネントテスト） | 3D モデルの胴体色（目視） |
 | メンバー身長編集 | 追加時の初期身長、`changeMemberHeight`/`clampMemberHeight` による反映と範囲外のクランプ（domain）。身長入力欄: 現在値表示・確定時の反映・不正値時の据え置き・未選択時の無効化（`MemberHeightInput` のコンポーネントテスト） | 3D モデル全体の高さ変化、頭部の大きさが身長によらず一定であること（目視） |
 | 3D プレビュー | 座標写像関数（domain。天面の高さ Y=`STAGE_HEIGHT` を含む）、0 人時の空表示 | 「中央」視点での表示、人物モデルと名前ラベルの表示、ステージが厚みのある直方体として見えること、人物モデルの胴体色・全体の高さがメンバーのカラー・身長に応じて変わること（目視）、「上手」「下手」「客席側」の方向ラベルが 0 人時を含め常に表示されること、方向ラベルが正しい方向にありステージ・人物モデルと重ならないこと（目視） |
-| カメラ位置切り替え | `cameraPresets`: 「中央」が従来の固定視点と一致すること、左右の X 座標の符号反転、前方・後方の Z・Y、プリセット 5 つ・ID 重複なし（domain）。`appReducer`: 初期値が「中央」、`SELECT_CAMERA_PRESET` で `cameraPresetId` が変わり `isDirty` は変わらないこと、`REPLACE_FORMATION` で `cameraPresetId` が維持されること。`CameraPresetSelector`: トグル表示での選択状態・切り替え・同じボタン再押下での無視、幅 900px 未満でのメニュー集約と選択（`matchMedia` をモック）。`OperationsBar`: カメラ切り替えで `cameraPresetId` が変わり `isDirty` は `false` のまま | プリセット切り替えで名前ラベルの画面上の位置が変わり移動が収束すること、移動中の再切り替えで新しい目標へ向かうこと、ドラッグ・ホイール操作でカメラが動かないこと、再読み込みで「中央」に戻り未保存警告が出ないこと、操作バーが画面下部にあり 3D ビューと重ならずサムネイルが左上にあること、スマートフォン縦表示で「カメラ」ボタンに集約され横スクロールしないこと、5 つのプリセットそれぞれで見え方に違和感がないこと・移動の速さに違和感がないこと（目視） |
-| JSON エクスポート | シリアライズ結果、エクスポート→インポートの往復一致（domain） | ファイルのダウンロード |
-| JSON インポート | バリデーション（正常・不正）、不正時に状態が変わらないこと、不正時にエラーダイアログを表示すること（`window.alert` をモック） | ファイル選択から反映までの一連の流れ |
-| 保存・復元 | isDirty の遷移、シリアライズ・復元ロジック、保存完了ダイアログを表示すること（`window.alert` をモック） | 保存→再読み込みで復元、未保存時の警告、データなしで空ステージ |
+| カメラ位置切り替え | `cameraPresets`: 「中央」が従来の固定視点と一致すること、左右の X 座標の符号反転、前方・後方の Z・Y、プリセット 5 つ・ID 重複なし（domain）。`appReducer`: 初期値が「中央」、`SELECT_CAMERA_PRESET` で `cameraPresetId` が変わり `isDirty` は変わらないこと、`REPLACE_SHOW` で `cameraPresetId` が維持されること。`CameraPresetSelector`: トグル表示での選択状態・切り替え・同じボタン再押下での無視、幅 900px 未満でのメニュー集約と選択（`matchMedia` をモック）。`OperationsBar`: カメラ切り替えで `cameraPresetId` が変わり `isDirty` は `false` のまま | プリセット切り替えで名前ラベルの画面上の位置が変わり移動が収束すること、移動中の再切り替えで新しい目標へ向かうこと、ドラッグ・ホイール操作でカメラが動かないこと、再読み込みで「中央」に戻り未保存警告が出ないこと、操作バーが画面下部にあり 3D ビューと重ならずサムネイルが左上にあること、スマートフォン縦表示で「カメラ」ボタンに集約され横スクロールしないこと、5 つのプリセットそれぞれで見え方に違和感がないこと・移動の速さに違和感がないこと（目視） |
+| JSON エクスポート | `serializeShow`/`parseShowJson` によるシリアライズ結果（version 2）、エクスポート→インポートの往復一致（domain） | ファイルのダウンロード（`version` が 2 であること） |
+| JSON インポート | バリデーション（正常・不正。`version` が 2 でない場合、`color`/`height` の欠落、`formations` が空、立ち位置の欠落で `null` になることを含む）、不正時に状態が変わらないこと、不正時にエラーダイアログを表示すること（`window.alert` をモック） | ファイル選択から反映までの一連の流れ、version 1 の JSON・`color`/`height` が欠けた JSON を選択した場合にエラーダイアログが表示されること |
+| 保存・復元 | isDirty の遷移、`saveShow`/`restoreShow` のシリアライズ・復元ロジック、保存完了ダイアログを表示すること（`window.alert` をモック） | 保存→再読み込みで復元、未保存時の警告、データなしで空ステージ、LocalStorage に version 1 のデータが残っている場合に空のステージで開始すること |
 
 - 3D の名前ラベルは Drei の `Html` で DOM として描画し、E2E から名前を
   検証できるようにする。方向ラベル（`StageDirectionLabels`）も同様に `Html`
@@ -973,6 +1013,15 @@ reducer が新しい状態を生成
     → 3D（`PersonModel` の胴体色、`BODY_HEIGHT` を身長から算出する形への変更）
     → `MemberColorInput`/`MemberHeightInput` を追加
     → `FormationEditorDialog` に配線 — TDD
+13. 演目データモデルへの変更（#8 複数フォーメーション管理の子 Issue #49。
+    画面上の挙動は変えず、フォーメーションは常に 1 つのまま）: `domain`
+    （`Show`/`Formation`/`PlacedMember` 型、`createInitialShow`/
+    `getPlacedMembers`、`memberOperations`/`serialization` を `Show` ベースへ
+    変更） — TDD → `application`（`saveShow`/`restoreShow`/`exportShow`/
+    `importShow` へリネーム）→ `state`（`show`/`selectedFormationId`、
+    `REPLACE_SHOW`）→ コンポーネント（`FormationStageSvg`/`PersonModel` を
+    `PlacedMember` ベースへ、`FormationEditorDialog` を `Show` の下書きへ）—
+    既存の E2E が通ることを確認する
 
 ### 2.7 技術的リスク・未決事項
 
