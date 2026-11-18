@@ -1,13 +1,14 @@
 import { useReducer, type ReactNode } from 'react';
-import { restoreFormation } from '../application/restoreFormation';
+import { restoreShow } from '../application/restoreShow';
 import type { FormationStorage } from '../application/ports';
 import { appReducer } from './appReducer';
 import { AppDispatchContext, AppStateContext } from './appStateContexts';
 import { createInitialAppState, type AppState } from './appState';
+import { createInitialShow } from '../domain/show';
 
 function initAppState(storage: FormationStorage): AppState {
-  const restored = restoreFormation(storage);
-  return createInitialAppState(restored ?? { members: [] });
+  const restored = restoreShow(storage);
+  return createInitialAppState(restored ?? createInitialShow(crypto.randomUUID()));
 }
 
 type AppStateProviderProps = {
